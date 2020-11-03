@@ -204,32 +204,16 @@ namespace Cecilion {
         I_shader_constant_container() = default;
     };
 
-#define BEGIN_SHADER_CONST(Name, Governor) struct Name : public I_shader_constant_container {  friend Governor;\
-Name() : I_shader_constant_container() {this->m_buffer = Cecilion::Constant_buffer::Create(nullptr, this->get_size(), Cecilion::Vertex_buffer::Access_frequency::DYNAMIC, Cecilion::Vertex_buffer::Access_type::DRAW);} \
-public: void write(I_data<void*>* data) override  { \
+
+#define BEGIN_SHADER_CONST(Name) struct Name : public ::Cecilion::I_shader_constant_container {\
+Name() : I_shader_constant_container() {this->m_buffer = ::Cecilion::Constant_buffer::Create(nullptr, this->get_size(), ::Cecilion::Vertex_buffer::Access_frequency::DYNAMIC, ::Cecilion::Vertex_buffer::Access_type::DRAW);} \
+public: void write(::Cecilion::I_data<void*>* data) override  { \
     this->m_buffer->set_sub_data((float*)data->get_data(), data->get_offset(),data->stride());\
 } \
 std::shared_ptr<Cecilion::Constant_buffer> m_buffer;\
 public:
 #define SET_SHADER_CONST(type, name) type name = this->set_arg<type>(#name);
 #define END_SHADER_CONST(Name) };
-
-
-/// How to create a group of shader constants
-//    BEGIN_SHADER_CONST(Data_container)
-//        SET_SHADER_CONST(Float_data, scale)
-//    END_SHADER_CONST(Data_container)
-    class System_shader_constants;
-    BEGIN_SHADER_CONST(CL_System_params, System_shader_constants)
-        SET_SHADER_CONST(Matrix4_data, CL_View_matrix)             /// world view matrix
-        SET_SHADER_CONST(Matrix4_data, CL_Projection_matrix)  /// view and projection matrix
-        SET_SHADER_CONST(Float3_data, CL_Center_reference)      /// main camera position
-        SET_SHADER_CONST(Float_data, CL_Time)
-    END_SHADER_CONST(CL_System_params)
-
-    void init_shader_constants();
-
-    CL_System_params* get_system_params();
 
     /**
      * Governor class for CL_System_params

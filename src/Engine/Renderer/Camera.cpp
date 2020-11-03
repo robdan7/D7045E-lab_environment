@@ -58,17 +58,26 @@ namespace Cecilion {
     /// ---------- Orthographic camera ----------
 
     Orthographic_camera::Orthographic_camera(float left, float right, float top, float bottom, float znear, float zfar) {
+        this->m_up_vector = {0,1,0};
+        this->m_focus = {0, 0, -1};
+        this->m_rotation = {0,this->m_up_vector.x,this->m_up_vector.y,this->m_up_vector.z};
+        this->m_position = {0, 0, 0};
         this->m_projection_matrix = glm::ortho(left, right, bottom, top, znear, zfar);
         this->m_view_projection_matrix = this->m_projection_matrix * this->m_view_matrix;
     }
 
     void Orthographic_camera::on_update() {
-        glm::mat4 transform = glm::translate(glm::mat4(1.0f), m_focus) * glm::toMat4(this->m_rotation);
-        m_view_matrix = glm::inverse(transform);
+        this->m_view_matrix = glm::lookAt(this->m_position,this->m_focus, this->m_up_vector);
         m_view_projection_matrix = m_projection_matrix * m_view_matrix;
     }
 
     void Orthographic_camera::look_at(const glm::vec3 &position) {
         this->m_focus = position;
+    }
+
+    void Orthographic_camera::set_rotation(glm::vec3 axis, float angle) {
+        Camera::set_rotation(axis, angle);
+//        this->m_focus = glm::rotate(this->m_rotation,glm::vec4(0,1,0,0));
+        this->m_focus = this->m_position + (glm::vec3)(glm::toMat4(this->m_rotation)* glm::vec4 (0,0,-1,0));
     }
 }

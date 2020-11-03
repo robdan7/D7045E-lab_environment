@@ -7,7 +7,6 @@ add_library(Renderer STATIC
         Camera.cpp
         Shader.cpp
         Frustum_compute_query.cpp
-        Shader_constants.cpp
         Render_encoder.cpp
         )
 target_link_libraries(Renderer PUBLIC glm_static PRIVATE OpenGL_renderer)

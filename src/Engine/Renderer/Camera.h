@@ -9,7 +9,9 @@ namespace Cecilion {
      */
     class Camera {
     public:
-        virtual void set_position_axis_aligned(const glm::vec3& position) { m_position = position;}
+        virtual void set_position_axis_aligned(const glm::vec3& position) {
+            this->m_position = position;
+        }
 
         /**
          * Set the position relative to the current position aligned with current up
@@ -23,7 +25,7 @@ namespace Cecilion {
          /**
           *
           * @param axis - A normalized axis
-          * @param angle - The angle givenin radians.
+          * @param angle - The angle given in radians.
           */
         virtual void set_rotation(glm::vec3 axis, float angle) {
             this->m_rotation.x = axis.x * sin(angle / 2);
@@ -93,6 +95,8 @@ namespace Cecilion {
     public:
         Orthographic_camera(float left, float right, float top, float bottom, float znear, float zfar);
         void on_update() override;
+
+        void set_rotation(glm::vec3 axis, float angle) override;
 
         void look_at(const glm::vec3 &position) override;
 
