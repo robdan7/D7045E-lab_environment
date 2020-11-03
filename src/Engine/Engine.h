@@ -13,3 +13,6 @@
 #include "Renderer/Camera.h"
 #include "Renderer/Frustum_compute_query.h"
 #include "Renderer/Shader_constants.h"
+
+#include "ImGui/ImGui_layer.h"
+#include "ImGui/ImGui_panel.h"
