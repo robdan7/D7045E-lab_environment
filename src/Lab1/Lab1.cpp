@@ -1,5 +1,6 @@
 #define API_OPENGL
 #include <Engine.h>
+#include <cmath>
 #include <tuple>
 
 BEGIN_SHADER_CONST(Global_uniforms)
@@ -15,95 +16,82 @@ END_SHADER_CONST(Global_uniforms)
  * @param f
  * @return
  */
-glm::vec3 lerp(glm::vec3 a, glm::vec3 b, float f) {
+glm::vec2 lerp(const glm::vec2& a, const glm::vec2& b, float f) {
     return a+f*(b-a);
 }
 
 /**
- * Return the counter clockwise normal of a line/vector.
+ * Return the counter clockwise normal of a vector.
  * @param vec
  * @return
  */
-glm::vec3 cc_normal(glm::vec3 vec) {
-    auto result = glm::vec3(-vec.y,vec.x,0);
+glm::vec2 cc_normal(const glm::vec2 vec) {
+    auto result = glm::vec2(-vec.y,vec.x);
     result /= glm::length(result);
     return result;
 }
 
 
-void koch_helper(glm::vec3 a, glm::vec3 b, glm::vec3 normal, std::vector<float>& vec, std::vector<uint32_t>& ind, int depth, int max_depth) {
+void koch_helper(const glm::vec2& p0, const glm::vec2& p1, const glm::vec2& normal, std::vector<float>& vec, std::vector<uint32_t>& ind, uint32_t depth, uint32_t max_depth) {
     if (depth >= max_depth) {
         return;
     }
 
-    auto q0 = lerp(a,b,1/3.0f);
-    auto q1 = lerp(a,b,2/3.0f);
-    float h = sqrt(3/4.0f)*glm::length(b-a)/3;
+    auto q0 = lerp(p0, p1, 1 / 3.0f);
+    auto q1 = lerp(p0, p1, 2 / 3.0f);
+    float h = std::sqrt(3/4.0f) * glm::length(p1 - p0) / 3;  /// Distance from [p0,p1] to a.
+    auto a = lerp(p0, p1, 0.5f) + normal * h;
 
-    auto n = lerp(a,b, 0.5f)+normal*h;
-    koch_helper(a, q0, normal, vec,ind, depth + 1, max_depth);
-    auto index_a = vec.size()/glm::vec2::length();
+    koch_helper(p0, q0, normal, vec, ind, depth + 1, max_depth);
+    auto index_q0 = vec.size() / glm::vec2::length();
     vec.push_back(q0.x);
     vec.push_back(q0.y);
-    //vec.push_back(q0.z);
-    //vec.push_back(1);
-    koch_helper(q0, n, cc_normal(n - q0), vec,ind, depth + 1, max_depth);
-    auto index_b = vec.size()/glm::vec2::length();
-    vec.push_back(n.x);
-    vec.push_back(n.y);
-    //vec.push_back(n.z);
-    //vec.push_back(1);
-    koch_helper(n, q1, cc_normal(q1 - n), vec,ind, depth + 1, max_depth);
-    auto index_c = vec.size()/glm::vec2::length();
+
+    koch_helper(q0, a, cc_normal(a - q0), vec, ind, depth + 1, max_depth);
+    auto index_a = vec.size() / glm::vec2::length();
+    vec.push_back(a.x);
+    vec.push_back(a.y);
+
+    koch_helper(a, q1, cc_normal(q1 - a), vec, ind, depth + 1, max_depth);
+    auto index_q1 = vec.size() / glm::vec2::length();
     vec.push_back(q1.x);
     vec.push_back(q1.y);
-    //vec.push_back(q1.z);
-    //vec.push_back(1);
 
+    koch_helper(q1, p1, normal, vec, ind, depth + 1, max_depth);
 
+    /// Create a triangle from stored indices.
+    ind.push_back(index_q0);
+    ind.push_back(index_q1);
     ind.push_back(index_a);
-    ind.push_back(index_c);
-    ind.push_back(index_b);
-
-    koch_helper(q1, b, normal, vec,ind, depth + 1, max_depth);
 }
 
 
-void create_snowflake(std::shared_ptr<Engine::Vertex_buffer> vertex_buffer,std::shared_ptr<Engine::Index_buffer> index_buffer,float depth) {
+void create_snowflake(const std::shared_ptr<Engine::Vertex_buffer>& vertex_buffer,const std::shared_ptr<Engine::Index_buffer>& index_buffer,uint32_t depth) {
     std::vector<float> vec;
     std::vector<uint32_t> triangle_indices;
     float l = 1;
-    float k = l/sqrt(3);
-    glm::vec3 a = glm::vec3(-l/2,-k/2,0);
-    glm::vec3 b = glm::vec3(0,k,0);
-    glm::vec3 c = glm::vec3(l/2,-k/2,0);
+    float k = l/(float)std::sqrt(3);
+    auto a = glm::vec2(-l/2,-k/2);
+    auto b = glm::vec2(0,k);
+    auto c = glm::vec2(l/2,-k/2);
 
     auto index_a = vec.size()/glm::vec2::length();
     vec.push_back(a.x);
     vec.push_back(a.y);
-    //vec.push_back(0);
-    //vec.push_back(1);
-    //triangle_indices.push_back(0);
-
 
     koch_helper(a, b, cc_normal(b - a), vec,triangle_indices, 1, depth);
     auto index_b = vec.size()/glm::vec2::length();
     vec.push_back(b.x);
     vec.push_back(b.y);
-    //vec.push_back(0);
-    //vec.push_back(1);
+
     koch_helper(b, c, cc_normal(c - b), vec,triangle_indices, 1, depth);
     auto index_c = vec.size()/glm::vec2::length();
     vec.push_back(c.x);
     vec.push_back(c.y);
-    //vec.push_back(0);
-    //vec.push_back(1);
+
     koch_helper(c, a, cc_normal(a - c), vec,triangle_indices, 1, depth);
-    //auto index_a2 = vec.size()/glm::vec4::length();
     vec.push_back(a.x);
     vec.push_back(a.y);
-    //vec.push_back(0);
-    //vec.push_back(1);
 
     triangle_indices.push_back(index_a);
     triangle_indices.push_back(index_c);
@@ -111,47 +99,19 @@ void create_snowflake(std::shared_ptr<Engine::Vertex_buffer> vertex_buffer,std::
 
     vertex_buffer->reset_buffer(&vec[0], sizeof(float)*vec.size());
     index_buffer->reset_buffer(&triangle_indices[0], sizeof(uint32_t) * triangle_indices.size());
-
-/*
-    auto buffer = Engine::Vertex_buffer::Create(&vec[0], sizeof(float)*vec.size(),
-                                                  Engine::Vertex_buffer::Access_frequency::STATIC,
-                                                  Engine::Vertex_buffer::Access_type::DRAW);
-
-
-    Engine::Buffer_layout layout = {{Engine::Shader_data::Float4, "position"}};
-    buffer->set_layout(layout);
-
-    auto line_strip = Engine::Vertex_array::Create();
-    //line_strip->set_index_buffer(ind_buffer);
-    line_strip->add_vertex_buffer(buffer);
-
-
-    auto ind_buffer = Engine::Index_buffer::Create(&triangle_indices[0], sizeof(uint32_t) * triangle_indices.size());
-    auto triangles = Engine::Vertex_array::Create();
-    triangles->add_vertex_buffer(buffer);
-    triangles->set_index_buffer(ind_buffer);
-
-    return {line_strip, triangles};
-    */
 }
 
-class Test_panel : public Engine::ImGui_panel {
+class Slider_panel : public Engine::ImGui_panel {
 public:
     void on_imgui_render() override {
         ImGui_panel::on_imgui_render();
-        bool show = true;
-        ImGuiWindowFlags window_flags = 0;
 
-
-        // We specify a default position/size in case there's no data in the .ini file.
-        // We only do it to make the demo applications a little more welcoming, but typically this isn't required.
         ImGuiViewport* main_viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(ImVec2(main_viewport->GetWorkPos().x + 650, main_viewport->GetWorkPos().y + 20), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowSize(ImVec2(300, 100), ImGuiCond_FirstUseEver);
-        ImGui::Begin("my_window");
-        ImGui::SliderInt("depth", &this->m_value, 1, 7);
+        ImGui::Begin("Slider window");
+        ImGui::SliderInt("Depth", &this->m_value, 1, 7);
         ImGui::End();
-        //ImGui::ShowDemoWindow(&show);
     }
     int get_value() {
         return this->m_value;
@@ -241,7 +201,7 @@ int main(int argc, char** argv) {
 
     /// -------- GUI --------
     auto gui = Engine::ImGui_layer(window);
-    auto panel = std::make_shared<Test_panel>();
+    auto panel = std::make_shared<Slider_panel>();
     gui.push_panel(panel);
 
 

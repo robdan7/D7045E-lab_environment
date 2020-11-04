@@ -6,5 +6,4 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/include/glm)
 add_subdirectory(src/Engine)
-add_subdirectory(src/App)
 add_subdirectory(src/Lab1)
