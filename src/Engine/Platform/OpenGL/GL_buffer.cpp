@@ -4,7 +4,7 @@
 #include <fstream>
 #include "GL_buffer.h"
 #include "OpenGL.h"
-namespace Cecilion {
+namespace Engine {
     uint32_t GL_constant_buffer::bindings = 0;
 
     class GL_Raw_buffer {

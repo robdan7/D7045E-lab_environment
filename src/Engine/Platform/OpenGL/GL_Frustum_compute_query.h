@@ -1,6 +1,6 @@
 #pragma once
 #include <Renderer/Frustum_compute_query.h>
-namespace Cecilion {
+namespace Engine {
     class GL_shader;
     class GL_vertex_array;
     class GL_Frustum_compute_query : public Frustum_compute_query {

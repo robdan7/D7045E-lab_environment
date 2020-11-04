@@ -2,7 +2,7 @@
 #include "Compute_query.h"
 #include <cstdint>
 #include <Renderer/Buffer.h>
-namespace Cecilion {
+namespace Engine {
     /**
      * This is exactly what is sounds like.
      */

@@ -1,7 +1,7 @@
 #pragma once
 #include "Renderer_API.h"
 
-namespace Cecilion {
+namespace Engine {
     class Camera;
     class Shader;
     namespace Render {
@@ -19,19 +19,19 @@ namespace Cecilion {
             inline static void set_clear_color(const glm::vec4& color)  {
                 s_render_API->set_clear_color(color);
             }
-//            inline static void draw_indexed(const std::shared_ptr<Cecilion::Vertex_array>& vertex_array) {
+//            inline static void draw_indexed(const std::shared_ptr<Engine::Vertex_array>& vertex_array) {
 //                s_render_API->draw_indexed(vertex_array);
 //            }
-//            inline static void draw_instanced(const std::shared_ptr<Cecilion::Vertex_array>& vertex_array, int instances) {
+//            inline static void draw_instanced(const std::shared_ptr<Engine::Vertex_array>& vertex_array, int instances) {
 //                s_render_API->draw_indexed(vertex_array, instances);
 //            }
-//            inline static void draw_streams_instanced(const std::shared_ptr<Cecilion::Vertex_array>& vertex_array, int count, int instances) {
+//            inline static void draw_streams_instanced(const std::shared_ptr<Engine::Vertex_array>& vertex_array, int count, int instances) {
 //                s_render_API->draw_streamed(vertex_array,count,instances);
 //            }
-            inline static void draw_stream(std::shared_ptr<Cecilion::Vertex_array> vertex_array, Polygon_type polygon_type, uint32_t start_vertex, uint32_t vertex_count, uint32_t instances) {
+            inline static void draw_stream(std::shared_ptr<Engine::Vertex_array> vertex_array, Polygon_type polygon_type, uint32_t start_vertex, uint32_t vertex_count, uint32_t instances) {
                 s_render_API->draw_streamed(vertex_array,polygon_type,start_vertex,vertex_count,instances);
             }
-            inline static void draw_indexed(std::shared_ptr<Cecilion::Vertex_array> vertex_array,Polygon_type polygon_type, int instances) {
+            inline static void draw_indexed(std::shared_ptr<Engine::Vertex_array> vertex_array,Polygon_type polygon_type, int instances) {
                 s_render_API->draw_indexed(vertex_array,polygon_type,instances);
             }
             inline static void enable_depth_test() {
@@ -62,11 +62,11 @@ namespace Cecilion {
              */
             static void switch_camera(const Camera& camera);
             static void end_scene();
-//            static void submit(const std::shared_ptr<Cecilion::Vertex_array>& vertex_array);
-//            static void submit_instanced(const std::shared_ptr<Cecilion::Shader>& shader, const std::shared_ptr<Cecilion::Vertex_array>& vertex_array, int instances);
-//            static void submit_arrays(const std::shared_ptr<Cecilion::Shader>& shader, const std::shared_ptr<Cecilion::Vertex_array>& vertex_array, int vertices, int instances);
-            static void submit_streamed(const std::shared_ptr<Cecilion::Shader>& shader,std::shared_ptr<Cecilion::Vertex_array> vertex_array, Polygon_type polygon_type, uint32_t start_vertex, uint32_t vertex_count, uint32_t instances);
-            static void submit_indexed(const std::shared_ptr<Cecilion::Shader>& shader,std::shared_ptr<Cecilion::Vertex_array> vertex_array,Polygon_type polygon_type, int instances);
+//            static void submit(const std::shared_ptr<Engine::Vertex_array>& vertex_array);
+//            static void submit_instanced(const std::shared_ptr<Engine::Shader>& shader, const std::shared_ptr<Engine::Vertex_array>& vertex_array, int instances);
+//            static void submit_arrays(const std::shared_ptr<Engine::Shader>& shader, const std::shared_ptr<Engine::Vertex_array>& vertex_array, int vertices, int instances);
+            static void submit_streamed(const std::shared_ptr<Engine::Shader>& shader,std::shared_ptr<Engine::Vertex_array> vertex_array, Polygon_type polygon_type, uint32_t start_vertex, uint32_t vertex_count, uint32_t instances);
+            static void submit_indexed(const std::shared_ptr<Engine::Shader>& shader,std::shared_ptr<Engine::Vertex_array> vertex_array,Polygon_type polygon_type, int instances);
             inline static Renderer_API::API get_API() {return Renderer_API::get_API();}
         };
     }

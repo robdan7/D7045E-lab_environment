@@ -1,5 +1,5 @@
 #pragma once
-namespace Cecilion {
+namespace Engine {
 
     /**
      * Compute queries are used to the engine, and preferably the GPU, to compute someting

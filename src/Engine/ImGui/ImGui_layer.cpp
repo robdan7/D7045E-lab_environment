@@ -7,7 +7,7 @@
 //#include <Event/Async_inbox.h>
 #include "ImGui_panel.h"
 // TODO Make sure the ImGui interface can handle multiple threads.
-namespace Cecilion {
+namespace Engine {
     //std::vector<std::shared_ptr<ImGui_panel>> ImGui_layer::s_panels = std::vector<std::shared_ptr<ImGui_panel>>();
     //std::vector<std::shared_ptr<ImGui_panel>> ImGui_layer::s_append_layer_stack = std::vector<std::shared_ptr<ImGui_panel>>();
     //std::vector<std::shared_ptr<ImGui_panel>> ImGui_layer::s_delete_stack = std::vector<std::shared_ptr<ImGui_panel>>();
@@ -108,17 +108,17 @@ namespace Cecilion {
         /*
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("File")) {
-                //if (ImGui::MenuItem("Exit")) Cecilion::Event_system::post<Cecilion::Window_close_event>();
+                //if (ImGui::MenuItem("Exit")) Engine::Event_system::post<Engine::Window_close_event>();
                 ImGui::Separator();
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("View")) {
-                //if (ImGui::MenuItem("Exit")) Cecilion::Event_system::post<Cecilion::Window_close_event>();
+                //if (ImGui::MenuItem("Exit")) Engine::Event_system::post<Engine::Window_close_event>();
                 ImGui::Separator();
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("Dummy")) {
-                //if (ImGui::MenuItem("Exit")) Cecilion::Event_system::post<Cecilion::Window_close_event>();
+                //if (ImGui::MenuItem("Exit")) Engine::Event_system::post<Engine::Window_close_event>();
                 ImGui::Separator();
                 ImGui::EndMenu();
             }
@@ -184,10 +184,10 @@ namespace Cecilion {
             //CORE_LOG_ERROR("ImGui::ImGui_layer:: Gui layer has already been initialized!");
             return;
         }
-        Cecilion::Layer<>* imgui = new Cecilion::ImGui_layer();
-        std::shared_ptr<Cecilion::Layer<>> gui = std::make_shared<ImGui_layer>();
+        Engine::Layer<>* imgui = new Engine::ImGui_layer();
+        std::shared_ptr<Engine::Layer<>> gui = std::make_shared<ImGui_layer>();
         ImGui_layer::s_gui_layer = std::static_pointer_cast<ImGui_layer>(gui);
-        Cecilion::Application::get().append_layer(gui);
+        Engine::Application::get().append_layer(gui);
     }
 */
     void ImGui_layer::push_panel(std::shared_ptr<ImGui_panel> panel) {
@@ -228,7 +228,7 @@ namespace Cecilion {
         this->s_delete_stack.clear();
     }
 
-    ImGui_layer::ImGui_layer(std::shared_ptr<Cecilion::Window> window) {
+    ImGui_layer::ImGui_layer(std::shared_ptr<Engine::Window> window) {
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();

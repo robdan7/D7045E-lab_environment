@@ -2,17 +2,17 @@
 #include <Engine.h>
 
 BEGIN_SHADER_CONST(user_const)
-    SET_SHADER_CONST(Cecilion::Matrix4_data, view_matrix)
-    SET_SHADER_CONST(Cecilion::Matrix4_data, transform_matrix)
+    SET_SHADER_CONST(Engine::Matrix4_data, view_matrix)
+    SET_SHADER_CONST(Engine::Matrix4_data, transform_matrix)
 END_SHADER_CONST(user_const)
 
 int main(int argc, char** argv) {
-    auto window = Cecilion::Window::create_window();
+    auto window = Engine::Window::create_window();
 
     auto params = new user_const();
 
 
-    auto vertex = Cecilion::Shader::create_shader_stage(
+    auto vertex = Engine::Shader::create_shader_stage(
             GL_VERTEX_SHADER,
             R"(
             #version 450 core
@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
             }
 
             )");
-    auto fragment = Cecilion::Shader::create_shader_stage(
+    auto fragment = Engine::Shader::create_shader_stage(
             GL_FRAGMENT_SHADER,
             R"(
             #version 450 core
@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
                 color = vec4(1,0,0,1);
             }
             )");
-    auto shader = Cecilion::Shader::create_shader({vertex, fragment});
+    auto shader = Engine::Shader::create_shader({vertex, fragment});
     shader->compile();
 
     GLuint index= glGetUniformBlockIndex(shader->get_ID(), "Uniform_block");
@@ -48,14 +48,14 @@ int main(int argc, char** argv) {
                         0.25f,-0.25,0,1,
                         0.25f,0.25f,0,1,
                         0-0.25,0.25f,0,1};
-    auto buffer = Cecilion::Vertex_buffer::Create(vertices, sizeof(vertices),
-                                                  Cecilion::Vertex_buffer::Access_frequency::STATIC,
-                                                  Cecilion::Vertex_buffer::Access_type::DRAW);
-    Cecilion::Buffer_layout layout = {{Cecilion::Shader_data::Float4, "position"}};
+    auto buffer = Engine::Vertex_buffer::Create(vertices, sizeof(vertices),
+                                                  Engine::Vertex_buffer::Access_frequency::STATIC,
+                                                  Engine::Vertex_buffer::Access_type::DRAW);
+    Engine::Buffer_layout layout = {{Engine::Shader_data::Float4, "position"}};
     buffer->set_layout(layout);
-    auto vertex_array = Cecilion::Vertex_array::Create();
+    auto vertex_array = Engine::Vertex_array::Create();
     vertex_array->add_vertex_buffer(buffer);
-    auto camera = Cecilion::Orthographic_camera(-1,1,1,-1,0,1);
+    auto camera = Engine::Orthographic_camera(-1,1,1,-1,0,1);
 
 
     //params->view_matrix.m_data += glm::vec4(0.35,0,0,1);
@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
 
 
 
-    //Cecilion::Render::Render_command::enable_depth_test();
+    //Engine::Render::Render_command::enable_depth_test();
     //glm::translate(params->view_matrix.m_data, glm::vec3(0.1,0,0));
     float angle = 0;
     while (!window->should_close()) {
@@ -79,11 +79,11 @@ int main(int argc, char** argv) {
         angle += 0.03f;
 
 
-        params->write((Cecilion::I_data<void *> *) &params->view_matrix);
-        params->write((Cecilion::I_data<void *> *) &params->transform_matrix);
+        params->write((Engine::I_data<void *> *) &params->view_matrix);
+        params->write((Engine::I_data<void *> *) &params->transform_matrix);
 
-        Cecilion::Render::Render_command::set_clear_color({0.8,0.8,0.3,1});
-        Cecilion::Render::Render_command::clear();
+        Engine::Render::Render_command::set_clear_color({0.8,0.8,0.3,1});
+        Engine::Render::Render_command::clear();
 
         //params->view_matrix.m_data = glm::mat4(1.0f);
         //params->view_matrix.m_data += glm::vec4(100.0f,0,0,1);

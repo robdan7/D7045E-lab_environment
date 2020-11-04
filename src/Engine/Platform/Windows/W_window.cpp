@@ -1,6 +1,6 @@
 #include "W_window.h"
 
-namespace Cecilion {
+namespace Engine {
     bool s_running = true;
     #define get_GLFW_window(window) (W_window*)glfwGetWindowUserPointer(window)
     static bool s_GLFW_initialized = false;
@@ -56,7 +56,7 @@ namespace Cecilion {
             //this->post(std::make_shared<Event_message>(2));
             //W_window* this_window = get_GLFW_window(window);
             s_running = false;
-            //Event_system::post<Cecilion::Window_close_event>();
+            //Event_system::post<Engine::Window_close_event>();
         });
 
         /// Resize events.
@@ -66,17 +66,17 @@ namespace Cecilion {
             this_window->m_data->height = height;
             this_window->m_data->width = width;
             this_window->activate_resize();
-            //Event_system::post<Cecilion::Window_resize_event>(width, height);
+            //Event_system::post<Engine::Window_resize_event>(width, height);
         });
 
 
         /// These events should be handled by the app layers.
         glfwSetMouseButtonCallback(this->m_window, [](GLFWwindow* window, int button, int action, int mods){
-            //Event_system::post<Cecilion::Mouse_button_Event>(button, action);
+            //Event_system::post<Engine::Mouse_button_Event>(button, action);
         });
 
         glfwSetKeyCallback(this->m_window, [](GLFWwindow* window, int key, int scancode, int action, int mods){
-            //Event_system::post<Cecilion::Keyboard_key_Event>(key, action);
+            //Event_system::post<Engine::Keyboard_key_Event>(key, action);
         });
 
         glfwSetCharCallback(this->m_window, [](GLFWwindow* window, unsigned int unicode) {
@@ -84,11 +84,11 @@ namespace Cecilion {
         });
 
         glfwSetCursorPosCallback(this->m_window, [] (GLFWwindow* window, double xpos, double ypos) {
-            //Event_system::post<Cecilion::Mouse_cursor_Event>(xpos, ypos);
+            //Event_system::post<Engine::Mouse_cursor_Event>(xpos, ypos);
         });
 
         glfwSetScrollCallback(this->m_window,  [] (GLFWwindow* window, double xoffset, double yoffset){
-            //Event_system::post<Cecilion::Mouse_scroll_Event>(xoffset, yoffset);
+            //Event_system::post<Engine::Mouse_scroll_Event>(xoffset, yoffset);
         });
 
     }

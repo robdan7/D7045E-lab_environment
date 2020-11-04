@@ -2,10 +2,10 @@
 #include <string>
 #include <Renderer/GLFW_context.h>
 
-namespace Cecilion {
+namespace Engine {
     /**
-     * Abstract window class for Cecilion. The engine doesn't care what kind of window we're using.
-     * It could be on Windows, Linux or Mac, Cecilion doesn't care.
+     * Abstract window class for Engine. The engine doesn't care what kind of window we're using.
+     * It could be on Windows, Linux or Mac, Engine doesn't care.
      *
      * TODO Implement support for multiple windows. Very low priority.
      */

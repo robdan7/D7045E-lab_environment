@@ -1,7 +1,7 @@
 #include "Buffer.h"
 #include "Renderer.h"
 #include <Platform/OpenGL/GL_buffer.h>
-namespace Cecilion {
+namespace Engine {
 
     /**
      * Create a new vertex buffer. There is no need to create an API specific buffer.
@@ -9,7 +9,7 @@ namespace Cecilion {
      * @param size - The size in bytes.
      * @return
      */
-    std::shared_ptr<Vertex_buffer> Cecilion::Vertex_buffer::Create(void* vertices, uint32_t size, Raw_buffer::Access_frequency frequency, Raw_buffer::Access_type type) {
+    std::shared_ptr<Vertex_buffer> Engine::Vertex_buffer::Create(void* vertices, uint32_t size, Raw_buffer::Access_frequency frequency, Raw_buffer::Access_type type) {
         //switch (Render::Renderer::get_API()) {
         //    case Render::Renderer_API::API::None :
                 //CORE_ASSERT(false, "Renderer::Buffer:: No render API is defined!");
@@ -28,7 +28,7 @@ namespace Cecilion {
      * @param count
      * @return
      */
-    std::shared_ptr<Index_buffer> Cecilion::Index_buffer::Create(uint32_t *indices, uint32_t count,Raw_buffer::Access_frequency frequency) {
+    std::shared_ptr<Index_buffer> Engine::Index_buffer::Create(uint32_t *indices, uint32_t count,Raw_buffer::Access_frequency frequency) {
         //switch (Render::Renderer::get_API()) {
         //    case Render::Renderer_API::API::None :
                 //CORE_ASSERT(false, "Renderer::Buffer:: No render API is defined!");

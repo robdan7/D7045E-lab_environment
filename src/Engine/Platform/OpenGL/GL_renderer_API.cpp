@@ -3,7 +3,7 @@
 #include <Renderer/Vertex_array.h>
 #include <Renderer/Render_encoder.h>
 #include <iostream>
-namespace Cecilion {
+namespace Engine {
     namespace Render {
         void GL_renderer_API::clear() {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -50,20 +50,20 @@ namespace Cecilion {
             return polygon;
         }
 
-        void GL_renderer_API::draw_indexed(std::shared_ptr<Cecilion::Vertex_array> vertex_array,Polygon_type polygon_type, int instances) {
+        void GL_renderer_API::draw_indexed(std::shared_ptr<Engine::Vertex_array> vertex_array,Polygon_type polygon_type, int instances) {
             GLuint polygon = decode_polygons(polygon_type);
-//            const Cecilion::Vertex_array::Render_information& info = vertex_array->get_render_information();
+//            const Engine::Vertex_array::Render_information& info = vertex_array->get_render_information();
 //            switch(vertex_array->get_draw_type()) {
-//                case Cecilion::Vertex_array::Render_ordering::INDEXED:
+//                case Engine::Vertex_array::Render_ordering::INDEXED:
                     glDrawElementsInstanced(polygon, vertex_array->get_index_buffer()->get_count(),GL_UNSIGNED_INT,nullptr,instances);
 //                    break;
-//                case Cecilion::Vertex_array::Render_ordering::STREAM:
+//                case Engine::Vertex_array::Render_ordering::STREAM:
 //                    glDrawArraysInstanced(polygon, info.stream.m_start_vertex,info.stream.m_vertex_count,info.stream.instances);
 //                    break;
 //            }
         }
 
-        void GL_renderer_API::draw_streamed(std::shared_ptr<Cecilion::Vertex_array> vertex_array,Polygon_type polygon_type, uint32_t start_vertex,
+        void GL_renderer_API::draw_streamed(std::shared_ptr<Engine::Vertex_array> vertex_array,Polygon_type polygon_type, uint32_t start_vertex,
                                             uint32_t vertex_count, uint32_t instances) {
             GLuint polygon = decode_polygons(polygon_type);
             glDrawArraysInstanced(polygon, start_vertex,vertex_count,instances);

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Renderer/Buffer.h>
-namespace Cecilion {
+namespace Engine {
 
     class GL_vertex_buffer : public Vertex_buffer {
     public:

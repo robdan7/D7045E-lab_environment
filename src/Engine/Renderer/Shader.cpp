@@ -2,13 +2,13 @@
 #include <Platform/OpenGL/GL_shader.h>
 #include "Renderer.h"
 
-namespace Cecilion {
+namespace Engine {
 
     std::shared_ptr<Shader_stage> Shader::create_shader_stage(const uint32_t shader_type, const std::string&& shader_source) {
         switch(Render::Renderer::get_API()) {
             case Render::Renderer_API::API::None:
-                //CORE_ASSERT(false, "Cecilion::Shader:: No render API is defined!");
-                std::cout << "Cecilion::Shader:: No render API is defined!" << std::endl;
+                //CORE_ASSERT(false, "Engine::Shader:: No render API is defined!");
+                std::cout << "Engine::Shader:: No render API is defined!" << std::endl;
                 break;
             case Render::Renderer_API::API::OpenGL:
                 return std::make_shared<GL_shader_stage>(shader_type, std::move(shader_source));
@@ -20,8 +20,8 @@ namespace Cecilion {
     std::shared_ptr<Shader> Shader::create_shader(const std::initializer_list<std::shared_ptr<Shader_stage>> elements) {
         switch (Render::Renderer::get_API()) {
             case Render::Renderer_API::API::None:
-                //CORE_ASSERT(false, "Cecilion::Shader:: No render API is defined!");
-                std::cout << "Cecilion::Shader:: No render API is defined!" << std::endl;
+                //CORE_ASSERT(false, "Engine::Shader:: No render API is defined!");
+                std::cout << "Engine::Shader:: No render API is defined!" << std::endl;
                 break;
             case Render::Renderer_API::API::OpenGL:
                 return std::make_shared<GL_shader>(std::move(elements));
@@ -34,8 +34,8 @@ namespace Cecilion {
     std::shared_ptr<Shader> Shader::load_binary_shader(uint32_t binary_format, const char *binary, uint32_t size) {
         switch (Render::Renderer::get_API()) {
             case Render::Renderer_API::API::None:
-                //CORE_ASSERT(false, "Cecilion::Shader:: No render API is defined!");
-                std::cout << "Cecilion::Shader:: No render API is defined!" << std::endl;
+                //CORE_ASSERT(false, "Engine::Shader:: No render API is defined!");
+                std::cout << "Engine::Shader:: No render API is defined!" << std::endl;
                 break;
             case Render::Renderer_API::API::OpenGL:
                 return std::make_shared<GL_shader>(binary_format, binary, size);

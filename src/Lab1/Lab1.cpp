@@ -3,9 +3,9 @@
 #include <tuple>
 
 BEGIN_SHADER_CONST(Global_uniforms)
-    SET_SHADER_CONST(Cecilion::Matrix4_data, view_matrix)
-    SET_SHADER_CONST(Cecilion::Matrix4_data, transform_matrix)
-    SET_SHADER_CONST(Cecilion::Float4_data, color);
+    SET_SHADER_CONST(Engine::Matrix4_data, view_matrix)
+    SET_SHADER_CONST(Engine::Matrix4_data, transform_matrix)
+    SET_SHADER_CONST(Engine::Float4_data, color);
 END_SHADER_CONST(Global_uniforms)
 
 /**
@@ -69,7 +69,7 @@ void koch_helper(glm::vec3 a, glm::vec3 b, glm::vec3 normal, std::vector<float>&
 }
 
 
-void create_snowflake(std::shared_ptr<Cecilion::Vertex_buffer> vertex_buffer,std::shared_ptr<Cecilion::Index_buffer> index_buffer,float depth) {
+void create_snowflake(std::shared_ptr<Engine::Vertex_buffer> vertex_buffer,std::shared_ptr<Engine::Index_buffer> index_buffer,float depth) {
     std::vector<float> vec;
     std::vector<uint32_t> triangle_indices;
     float l = 1;
@@ -113,21 +113,21 @@ void create_snowflake(std::shared_ptr<Cecilion::Vertex_buffer> vertex_buffer,std
     index_buffer->reset_buffer(&triangle_indices[0], sizeof(uint32_t) * triangle_indices.size());
 
 /*
-    auto buffer = Cecilion::Vertex_buffer::Create(&vec[0], sizeof(float)*vec.size(),
-                                                  Cecilion::Vertex_buffer::Access_frequency::STATIC,
-                                                  Cecilion::Vertex_buffer::Access_type::DRAW);
+    auto buffer = Engine::Vertex_buffer::Create(&vec[0], sizeof(float)*vec.size(),
+                                                  Engine::Vertex_buffer::Access_frequency::STATIC,
+                                                  Engine::Vertex_buffer::Access_type::DRAW);
 
 
-    Cecilion::Buffer_layout layout = {{Cecilion::Shader_data::Float4, "position"}};
+    Engine::Buffer_layout layout = {{Engine::Shader_data::Float4, "position"}};
     buffer->set_layout(layout);
 
-    auto line_strip = Cecilion::Vertex_array::Create();
+    auto line_strip = Engine::Vertex_array::Create();
     //line_strip->set_index_buffer(ind_buffer);
     line_strip->add_vertex_buffer(buffer);
 
 
-    auto ind_buffer = Cecilion::Index_buffer::Create(&triangle_indices[0], sizeof(uint32_t) * triangle_indices.size());
-    auto triangles = Cecilion::Vertex_array::Create();
+    auto ind_buffer = Engine::Index_buffer::Create(&triangle_indices[0], sizeof(uint32_t) * triangle_indices.size());
+    auto triangles = Engine::Vertex_array::Create();
     triangles->add_vertex_buffer(buffer);
     triangles->set_index_buffer(ind_buffer);
 
@@ -135,7 +135,7 @@ void create_snowflake(std::shared_ptr<Cecilion::Vertex_buffer> vertex_buffer,std
     */
 }
 
-class Test_panel : public Cecilion::ImGui_panel {
+class Test_panel : public Engine::ImGui_panel {
 public:
     void on_imgui_render() override {
         ImGui_panel::on_imgui_render();
@@ -163,11 +163,11 @@ private:
 
 int main(int argc, char** argv) {
     /// -------- Window and uniforms --------
-    auto window = std::shared_ptr<Cecilion::Window>(Cecilion::Window::create_window());
+    auto window = std::shared_ptr<Engine::Window>(Engine::Window::create_window());
     auto uniforms = new Global_uniforms();
 
     /// -------- Shaders --------
-    auto vertex = Cecilion::Shader::create_shader_stage(
+    auto vertex = Engine::Shader::create_shader_stage(
             GL_VERTEX_SHADER,
             R"(
             #version 450 core
@@ -184,7 +184,7 @@ int main(int argc, char** argv) {
             }
 
             )");
-    auto fragment = Cecilion::Shader::create_shader_stage(
+    auto fragment = Engine::Shader::create_shader_stage(
             GL_FRAGMENT_SHADER,
             R"(
             #version 450 core
@@ -199,7 +199,7 @@ int main(int argc, char** argv) {
             }
             )");
 
-    auto shader_program = Cecilion::Shader::create_shader({vertex, fragment});
+    auto shader_program = Engine::Shader::create_shader({vertex, fragment});
     shader_program->compile();
 
     /// The uniform bindings must be done manually.
@@ -208,22 +208,22 @@ int main(int argc, char** argv) {
 
 
     /// -------- Buffers --------
-    auto vertex_buffer = Cecilion::Vertex_buffer::Create(nullptr, 0,
-                                                         Cecilion::Vertex_buffer::Access_frequency::DYNAMIC,
-                                                         Cecilion::Vertex_buffer::Access_type::DRAW);
+    auto vertex_buffer = Engine::Vertex_buffer::Create(nullptr, 0,
+                                                         Engine::Vertex_buffer::Access_frequency::DYNAMIC,
+                                                         Engine::Vertex_buffer::Access_type::DRAW);
 
     /// Set the layout of the vertex buffer. This tells the VAO what the vertex attributes should be.
-    Cecilion::Buffer_layout layout = {{Cecilion::Shader_data::Float2, "position"}};
+    Engine::Buffer_layout layout = {{Engine::Shader_data::Float2, "position"}};
     vertex_buffer->set_layout(layout);
 
-    auto index_buffer = Cecilion::Index_buffer::Create(nullptr, 0,Cecilion::Raw_buffer::Access_frequency::DYNAMIC); /// TODO Enable index buffer layouts.
+    auto index_buffer = Engine::Index_buffer::Create(nullptr, 0,Engine::Raw_buffer::Access_frequency::DYNAMIC); /// TODO Enable index buffer layouts.
 
 
     /// -------- VAOs --------
-    auto line_vertex_array = Cecilion::Vertex_array::Create();
+    auto line_vertex_array = Engine::Vertex_array::Create();
     line_vertex_array->add_vertex_buffer(vertex_buffer);
 
-    auto triangle_vertex_array = Cecilion::Vertex_array::Create();
+    auto triangle_vertex_array = Engine::Vertex_array::Create();
     triangle_vertex_array->add_vertex_buffer(vertex_buffer);
     triangle_vertex_array->set_index_buffer(index_buffer);
 
@@ -232,15 +232,15 @@ int main(int argc, char** argv) {
 
     /// -------- Camera --------
     float aspect_ratio = ((float)window->get_width()/window->get_height());
-    auto camera = Cecilion::Orthographic_camera(-aspect_ratio,aspect_ratio,1,-1,0,1);
+    auto camera = Engine::Orthographic_camera(-aspect_ratio,aspect_ratio,1,-1,0,1);
     camera.on_update(); /// This is the only update needed.
 
     /// Initialize camera uniform matrix.
     uniforms->view_matrix.m_data = camera.get_view_projection_matrix();
-    uniforms->write((Cecilion::I_data<void *> *) &uniforms->view_matrix);
+    uniforms->write((Engine::I_data<void *> *) &uniforms->view_matrix);
 
     /// -------- GUI --------
-    auto gui = Cecilion::ImGui_layer(window);
+    auto gui = Engine::ImGui_layer(window);
     auto panel = std::make_shared<Test_panel>();
     gui.push_panel(panel);
 
@@ -253,7 +253,7 @@ int main(int argc, char** argv) {
 
     /// Misc GL and engine commands.
     glLineWidth(2); /// TODO move to engine.
-    Cecilion::Render::Render_command::set_clear_color({0.8,0.8,0.3,1});
+    Engine::Render::Render_command::set_clear_color({0.8,0.8,0.3,1});
 
     while (!window->should_close()) {
         /// Update transform.
@@ -265,22 +265,22 @@ int main(int argc, char** argv) {
         angle += 0.02f;
 
         /// Update translation uniform.
-        uniforms->write((Cecilion::I_data<void *> *) &uniforms->transform_matrix);
+        uniforms->write((Engine::I_data<void *> *) &uniforms->transform_matrix);
 
         /// Clear frame buffer and update GUI
-        Cecilion::Render::Render_command::clear();
+        Engine::Render::Render_command::clear();
 
         shader_program->bind();
 
         /// Draw filled snowflake.
         uniforms->color.m_data = red;
-        uniforms->write((Cecilion::I_data<void *> *) &uniforms->color);
+        uniforms->write((Engine::I_data<void *> *) &uniforms->color);
         triangle_vertex_array->bind();
         glDrawElements(GL_TRIANGLES,index_buffer->get_count()/sizeof(uint32_t),GL_UNSIGNED_INT, nullptr);
 
         /// Draw snowflake lines.
         uniforms->color.m_data = black;
-        uniforms->write((Cecilion::I_data<void *> *) &uniforms->color);
+        uniforms->write((Engine::I_data<void *> *) &uniforms->color);
         line_vertex_array->bind();
         glDrawArrays(GL_LINE_STRIP,0,line_vertex_array->get_vertex_buffer()[0]->get_size()/sizeof(float)/glm::vec2::length());
 

@@ -1,9 +1,9 @@
 #include "Render_encoder.h"
 #include "Renderer.h"
-namespace Cecilion {
+namespace Engine {
     namespace Render {
 
-        void Stream_renderer::draw_instanced(const std::shared_ptr<Cecilion::Shader>& shader,const std::shared_ptr<Cecilion::Vertex_array> &vertex_array, uint32_t instances) const {
+        void Stream_renderer::draw_instanced(const std::shared_ptr<Engine::Shader>& shader,const std::shared_ptr<Engine::Vertex_array> &vertex_array, uint32_t instances) const {
             Renderer::submit_streamed(shader, vertex_array,this->polygons, this->start_vertex,this->vertex_count,instances);
         }
 
@@ -12,7 +12,7 @@ namespace Cecilion {
             this->start_vertex = start_vertex;
         }
 
-        void Index_renderer::draw_instanced(const std::shared_ptr<Cecilion::Shader>& shader,const std::shared_ptr<Cecilion::Vertex_array> &vertex_array, uint32_t instances) const {
+        void Index_renderer::draw_instanced(const std::shared_ptr<Engine::Shader>& shader,const std::shared_ptr<Engine::Vertex_array> &vertex_array, uint32_t instances) const {
             Renderer::submit_indexed(shader, vertex_array,this->polygons,instances);
         }
     }

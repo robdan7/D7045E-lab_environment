@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Renderer/Vertex_array.h>
-namespace Cecilion {
+namespace Engine {
     class GL_vertex_array : public Vertex_array {
     public:
         GL_vertex_array();

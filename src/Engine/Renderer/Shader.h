@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <string>
 #include "Buffer.h"
-namespace Cecilion {
+namespace Engine {
     /**
      * Generic shader class.
      */

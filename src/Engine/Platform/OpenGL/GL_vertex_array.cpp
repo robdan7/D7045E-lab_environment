@@ -1,11 +1,11 @@
 #include "GL_vertex_array.h"
 #include <Platform/OpenGL/OpenGL.h>
-namespace Cecilion {
+namespace Engine {
     GL_vertex_array::GL_vertex_array() {
         glCreateVertexArrays(1, &this->m_render_ID);
     }
     void GL_vertex_array::bind() const {
-        //CECILION_PROFILE_FUNCTION();
+        //Engine_PROFILE_FUNCTION();
         glBindVertexArray(this->m_render_ID);
     }
 

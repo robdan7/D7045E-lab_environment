@@ -5,12 +5,12 @@
 #include <Core/Window.h>
 //#include <Core/Layers/Application_layer_st.h>
 
-namespace Cecilion {
+namespace Engine {
     class ImGui_panel;
     class ImGui_layer {
         friend class ImGui_panel;
     public:
-        ImGui_layer(std::shared_ptr<Cecilion::Window> window);
+        ImGui_layer(std::shared_ptr<Engine::Window> window);
         //void on_attach();
         ~ImGui_layer();
         void push_panel(std::shared_ptr<ImGui_panel> panel);

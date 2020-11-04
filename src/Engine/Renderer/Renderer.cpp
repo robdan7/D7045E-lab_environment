@@ -6,7 +6,7 @@
 #include "Camera.h"
 #include "Shader.h"
 
-namespace Cecilion {
+namespace Engine {
     namespace Render {
         Renderer_API *Render_command::s_render_API = new GL_renderer_API();
 
@@ -21,8 +21,8 @@ namespace Cecilion {
 //            vertex_array->unbind();
 //        }
 
-//        void Renderer::submit_instanced(const std::shared_ptr<Cecilion::Shader> &shader,
-//                                        const std::shared_ptr<Cecilion::Vertex_array> &vertex_array, int instances) {
+//        void Renderer::submit_instanced(const std::shared_ptr<Engine::Shader> &shader,
+//                                        const std::shared_ptr<Engine::Vertex_array> &vertex_array, int instances) {
 //            shader->bind();
 //            vertex_array->bind();
 //            Render_command::draw_instanced(vertex_array, instances);
@@ -31,7 +31,7 @@ namespace Cecilion {
 //        }
 
 
-        void Renderer::submit_streamed(const std::shared_ptr<Cecilion::Shader>& shader,std::shared_ptr<Cecilion::Vertex_array> vertex_array, Polygon_type polygon_type,
+        void Renderer::submit_streamed(const std::shared_ptr<Engine::Shader>& shader,std::shared_ptr<Engine::Vertex_array> vertex_array, Polygon_type polygon_type,
                                        uint32_t start_vertex, uint32_t vertex_count, uint32_t instances) {
             shader->bind();
             vertex_array->bind();
@@ -40,8 +40,8 @@ namespace Cecilion {
             shader->unbind();
         }
 
-        void Renderer::submit_indexed(const std::shared_ptr<Cecilion::Shader> &shader,
-                                      std::shared_ptr<Cecilion::Vertex_array> vertex_array, Polygon_type polygon_type,
+        void Renderer::submit_indexed(const std::shared_ptr<Engine::Shader> &shader,
+                                      std::shared_ptr<Engine::Vertex_array> vertex_array, Polygon_type polygon_type,
                                       int instances) {
             shader->bind();
             vertex_array->bind();
@@ -51,8 +51,8 @@ namespace Cecilion {
 
         }
 
-//        void Renderer::submit_arrays(const std::shared_ptr<Cecilion::Shader> &shader,
-//                                const std::shared_ptr<Cecilion::Vertex_array> &vertex_array,
+//        void Renderer::submit_arrays(const std::shared_ptr<Engine::Shader> &shader,
+//                                const std::shared_ptr<Engine::Vertex_array> &vertex_array,
 //                                int vertices, int instances) {
 //            shader->bind();
 //            vertex_array->bind();

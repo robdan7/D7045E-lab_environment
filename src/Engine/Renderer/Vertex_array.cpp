@@ -1,12 +1,12 @@
 #include "Vertex_array.h"
 #include "Renderer.h"
 #include <Platform/OpenGL/GL_vertex_array.h>
-namespace Cecilion {
-    Cecilion::Vertex_array::~Vertex_array() {
+namespace Engine {
+    Engine::Vertex_array::~Vertex_array() {
 
     }
 
-    std::shared_ptr<Vertex_array> Cecilion::Vertex_array::Create() {
+    std::shared_ptr<Vertex_array> Engine::Vertex_array::Create() {
         switch (Render::Renderer::get_API()) {
             case Render::Renderer_API::API::None :
                 //CORE_ASSERT(false, "Renderer_API:: No render API is defined!");

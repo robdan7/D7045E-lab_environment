@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <iostream>
-namespace Cecilion {
+namespace Engine {
     /**
      * Untested camera class
      */

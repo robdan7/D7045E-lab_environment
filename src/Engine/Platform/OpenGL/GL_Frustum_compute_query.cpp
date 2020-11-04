@@ -5,7 +5,7 @@
 #include <iostream>
 #include <fstream>
 
-namespace Cecilion {
+namespace Engine {
 
     GL_Frustum_compute_query::~GL_Frustum_compute_query() {
 

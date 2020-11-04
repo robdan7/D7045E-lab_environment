@@ -1,7 +1,7 @@
 #include "Renderer_API.h"
 #include <Core/Core.h>
-namespace Cecilion {
+namespace Engine {
     namespace Render {
-        Renderer_API::API Renderer_API::s_API = Cecilion::get_API();
+        Renderer_API::API Renderer_API::s_API = Engine::get_API();
     }
 }

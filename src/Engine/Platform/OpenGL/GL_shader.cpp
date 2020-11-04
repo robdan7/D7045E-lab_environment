@@ -7,7 +7,7 @@
 #include <bits/stdc++.h>
 #include <iostream>
 #include <sstream>
-namespace Cecilion {
+namespace Engine {
     GL_shader::GL_shader(std::initializer_list<std::shared_ptr<Shader_stage>> shaderstages) {
         this->m_program = glCreateProgram();
         for (std::shared_ptr<Shader_stage> stage : shaderstages) {

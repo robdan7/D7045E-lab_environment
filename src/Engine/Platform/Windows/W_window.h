@@ -4,7 +4,7 @@
 #include <Platform/OpenGL/OpenGL.h>
 #include <Renderer/GLFW_context.h>
 
-namespace Cecilion {
+namespace Engine {
     class W_window : public Window{
     public:
         explicit W_window(const Window_properties &properties, GLFW_context* context);

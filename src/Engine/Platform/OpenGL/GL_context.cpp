@@ -1,6 +1,6 @@
 #include "GL_context.h"
 #include "OpenGL.h"
-namespace Cecilion {
+namespace Engine {
     void GL_context::swap_buffers() {
         glfwSwapBuffers(this->m_window);
     }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Buffer.h"
-namespace Cecilion {
+namespace Engine {
     /**
      * Just a generic vertex array class.
      */

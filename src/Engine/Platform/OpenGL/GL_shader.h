@@ -11,9 +11,9 @@
 #define OPENGL_FRAGMENT_SHADER (35632)
 #define OPENGL_GEOMETRY_SHADER (0x8DD9)
 
-namespace Cecilion {
+namespace Engine {
     class GL_shader;
-    class GL_shader_stage : public Cecilion::Shader_stage {
+    class GL_shader_stage : public Engine::Shader_stage {
         friend class GL_shader;
     public:
         GL_shader_stage(const uint32_t shader_type, const std::string&& shader_source);
@@ -24,7 +24,7 @@ namespace Cecilion {
         void delete_shader(const uint32_t& shader);
         uint32_t shader;
     };
-    class GL_shader : public Cecilion::Shader {
+    class GL_shader : public Engine::Shader {
     public:
         GL_shader(std::initializer_list<std::shared_ptr<Shader_stage>> shaderstages);
 

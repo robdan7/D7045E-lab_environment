@@ -2,7 +2,7 @@
 #include "Renderer_API.h"
 #include <Platform/OpenGL/GL_Frustum_compute_query.h>
 
-namespace Cecilion {
+namespace Engine {
 
     void Frustum_compute_query::execute(uint32_t instances) {
         /// Automatically resize the output buffer if the data size has changed.
@@ -33,7 +33,7 @@ namespace Cecilion {
             m_last_result{0},
             m_vertices(vertices){
 
-        this->m_result_buffer = std::shared_ptr<Vertex_buffer>(Cecilion::Vertex_buffer::Create(nullptr, vertex_data_buffer->get_size(), Vertex_buffer::Access_frequency::DYNAMIC, Vertex_buffer::Access_type::COPY));
+        this->m_result_buffer = std::shared_ptr<Vertex_buffer>(Engine::Vertex_buffer::Create(nullptr, vertex_data_buffer->get_size(), Vertex_buffer::Access_frequency::DYNAMIC, Vertex_buffer::Access_type::COPY));
         this->m_result_buffer->set_layout(vertex_data_buffer->get_layout());
     }
 

@@ -1,7 +1,7 @@
 #pragma once
 
 //#include "Renderer_API.h"
-namespace Cecilion {
+namespace Engine {
     /// This is temporarily disabled. The code is moved into renderer.h
 //    class Render_command {
 //    public:

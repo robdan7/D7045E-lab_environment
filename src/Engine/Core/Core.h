@@ -1,12 +1,12 @@
 #pragma once
-#define CECILION_ENABLE_ASSERTS
+#define Engine_ENABLE_ASSERTS
 
 /// define what platform we're compiling to.
 #ifdef _WIN32
 #ifdef _WIN64
-#define CECILION_PLATFORM_WINDOWS_X64
+#define Engine_PLATFORM_WINDOWS_X64
 #else
-#define CECILION_PLATFORM_WINDOWS_X84
+#define Engine_PLATFORM_WINDOWS_X84
 #endif
 #else
 #error "Your platform is not supported!"
@@ -18,9 +18,9 @@
  */
 #include <Renderer/GLFW_context.h>
 #include "Renderer/Renderer_API.h"
-namespace Cecilion {
+namespace Engine {
     GLFW_context* create_engine_context();
-    Cecilion::Render::Renderer_API::API get_API();
+    Engine::Render::Renderer_API::API get_API();
 }
 
 
