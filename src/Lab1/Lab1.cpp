@@ -2,6 +2,8 @@
 #include <Engine.h>
 #include <cmath>
 #include <tuple>
+#include <functional>
+#define PI (atan(1)*4)
 
 BEGIN_SHADER_CONST(Global_uniforms)
     SET_SHADER_CONST(Engine::Matrix4_data, view_matrix)
@@ -124,7 +126,7 @@ private:
 int main(int argc, char** argv) {
     /// -------- Window and uniforms --------
     auto window = std::shared_ptr<Engine::Window>(Engine::Window::create_window());
-    auto uniforms = new Global_uniforms();
+    auto uniforms = Global_uniforms();
 
     /// -------- Shaders --------
     auto vertex = Engine::Shader::create_shader_stage(
@@ -176,7 +178,7 @@ int main(int argc, char** argv) {
     Engine::Buffer_layout layout = {{Engine::Shader_data::Float2, "position"}};
     vertex_buffer->set_layout(layout);
 
-    auto index_buffer = Engine::Index_buffer::Create(nullptr, 0,Engine::Raw_buffer::Access_frequency::DYNAMIC); /// TODO Enable index buffer layouts.
+    auto index_buffer = Engine::Index_buffer::Create(nullptr, 0,Engine::Raw_buffer::Access_frequency::DYNAMIC);
 
 
     /// -------- VAOs --------
@@ -196,8 +198,8 @@ int main(int argc, char** argv) {
     camera.on_update(); /// This is the only update needed.
 
     /// Initialize camera uniform matrix.
-    uniforms->view_matrix.m_data = camera.get_view_projection_matrix();
-    uniforms->write((Engine::I_data<void *> *) &uniforms->view_matrix);
+    uniforms.view_matrix.m_data = camera.get_view_projection_matrix();
+    uniforms.write((Engine::I_data<void *> *) &uniforms.view_matrix);
 
     /// -------- GUI --------
     auto gui = Engine::ImGui_layer(window);
@@ -212,20 +214,23 @@ int main(int argc, char** argv) {
     int current_depth = 1;
 
     /// Misc GL and engine commands.
-    glLineWidth(2); /// TODO move to engine.
+    glLineWidth(3); /// TODO move to engine.
     Engine::Render::Render_command::set_clear_color({0.8,0.8,0.3,1});
 
     while (!window->should_close()) {
-        /// Update transform.
-        float scale = sin(angle) * 0.5 + 1;
-        uniforms->transform_matrix.m_data = glm::rotate(glm::mat4(1.0f), 0.25f*angle, glm::vec3(0, 0, 1));
-        uniforms->transform_matrix.m_data = glm::translate(uniforms->transform_matrix.m_data, glm::vec3(0.75f,0,0));
-        uniforms->transform_matrix.m_data = glm::rotate(uniforms->transform_matrix.m_data, angle, glm::vec3(0, 0, 1));
-        uniforms->transform_matrix.m_data = glm::scale(uniforms->transform_matrix.m_data, glm::vec3(scale, scale, scale));
-        angle += 0.02f;
+        angle = std::fmod(angle+0.025f,8*PI);   /// Reset angle after 1 full rotation around window center.
+        /// Circle around window center
+        uniforms.transform_matrix.m_data = glm::rotate(glm::mat4(1.0f), 0.25f*angle, glm::vec3(0, 0, 1));
+        uniforms.transform_matrix.m_data = glm::translate(uniforms.transform_matrix.m_data, glm::vec3(0.75f,0,0));
+        /// Rotate around object origin.
+        uniforms.transform_matrix.m_data = glm::rotate(uniforms.transform_matrix.m_data, angle, glm::vec3(0, 0, 1));
 
-        /// Update translation uniform.
-        uniforms->write((Engine::I_data<void *> *) &uniforms->transform_matrix);
+        float scale = sin(angle) * 0.5f + 1;
+        uniforms.transform_matrix.m_data = glm::scale(uniforms.transform_matrix.m_data, glm::vec3(scale, scale, scale));
+
+
+        /// Update transform uniform.
+        uniforms.write((Engine::I_data<void *> *) &uniforms.transform_matrix);
 
         /// Clear frame buffer and update GUI
         Engine::Render::Render_command::clear();
@@ -233,14 +238,14 @@ int main(int argc, char** argv) {
         shader_program->bind();
 
         /// Draw filled snowflake.
-        uniforms->color.m_data = red;
-        uniforms->write((Engine::I_data<void *> *) &uniforms->color);
+        uniforms.color.m_data = red;
+        uniforms.write((Engine::I_data<void *> *) &uniforms.color);
         triangle_vertex_array->bind();
         glDrawElements(GL_TRIANGLES,index_buffer->get_count()/sizeof(uint32_t),GL_UNSIGNED_INT, nullptr);
 
         /// Draw snowflake lines.
-        uniforms->color.m_data = black;
-        uniforms->write((Engine::I_data<void *> *) &uniforms->color);
+        uniforms.color.m_data = black;
+        uniforms.write((Engine::I_data<void *> *) &uniforms.color);
         line_vertex_array->bind();
         glDrawArrays(GL_LINE_STRIP,0,line_vertex_array->get_vertex_buffer()[0]->get_size()/sizeof(float)/glm::vec2::length());
 
@@ -256,6 +261,4 @@ int main(int argc, char** argv) {
         }
         window->on_update();
     }
-
-    delete uniforms;
 }

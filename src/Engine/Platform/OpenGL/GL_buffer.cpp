@@ -178,7 +178,7 @@ namespace Engine {
         /// TODO Enable index buffer layouts.
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
          */
-        this->m_buffer_ID = GL_Raw_buffer::init(indices, count, draw_type, GL_ARRAY_BUFFER);
+        this->m_buffer_ID = GL_Raw_buffer::init(indices, count, draw_type, GL_ELEMENT_ARRAY_BUFFER);
     }
 
     GL_index_buffer::~GL_index_buffer() {
