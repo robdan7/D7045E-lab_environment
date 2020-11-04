@@ -263,6 +263,8 @@ namespace Cecilion {
      * An index buffer is the buffer that contains the order in which vertices
      * will be drawn. This saves storage space if many vertices in the vertex
      * buffer are connected/ the same.
+     *
+     * TODO There's no logical reason why the index buffer can't be a raw buffer. Add inheritance
      */
     class Index_buffer {
     public:
@@ -273,7 +275,9 @@ namespace Cecilion {
          * @param count - The size of all indices in bytes.
          * @return - A raw pointer to the newly created vertex buffer.
          */
-        static std::shared_ptr<Index_buffer> Create(uint32_t* indices, uint32_t count);
+        static std::shared_ptr<Index_buffer> Create(uint32_t* indices, uint32_t count,Raw_buffer::Access_frequency frequency);
+
+        virtual void reset_buffer(uint32_t* vertices,uint32_t size) = 0;
         virtual ~Index_buffer() {}
         virtual void bind() = 0;
         virtual void unbind() = 0;

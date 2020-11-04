@@ -97,15 +97,15 @@ namespace Cecilion {
         // any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
         bool p_open = true;
-        ImGui::Begin("DockSpace", &p_open, window_flags);
+        //ImGui::Begin("DockSpace", &p_open, window_flags);
         ImGui::PopStyleVar();
 
         if (opt_fullscreen)
-            ImGui::PopStyleVar(2);
-        ImGuiID dockspace_id = ImGui::GetID("DockSpace");
-        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
+           ImGui::PopStyleVar(2);
+        //ImGuiID dockspace_id = ImGui::GetID("DockSpace");
+        //ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
 
-
+        /*
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("File")) {
                 //if (ImGui::MenuItem("Exit")) Cecilion::Event_system::post<Cecilion::Window_close_event>();
@@ -125,7 +125,8 @@ namespace Cecilion {
             ImGui::EndMenuBar();
         }
 
-        ImGui::End();
+        //ImGui::End();
+         */
     }
 
     void ImGui_layer::end() {

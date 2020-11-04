@@ -74,7 +74,7 @@ namespace Cecilion {
             glBindBuffer(type, 0);
         }
 
-        static void reset_buffer(uint32_t type, uint32_t ID, float *vertices, uint32_t size, uint32_t draw_type) {
+        static void reset_buffer(uint32_t type, uint32_t ID, void *vertices, uint32_t size, uint32_t draw_type) {
             glBindBuffer(type, reinterpret_cast<GLuint>(ID));
             glBufferData(type, size, vertices, draw_type);
             glBindBuffer(type,0);
@@ -171,10 +171,14 @@ namespace Cecilion {
 
     /// -------------- Index buffer --------------
 
-    GL_index_buffer::GL_index_buffer(uint32_t *indices, uint32_t count) : m_count(count) {
-        glCreateBuffers(1, &this->m_buffer_ID);
+    GL_index_buffer::GL_index_buffer(uint32_t *indices, uint32_t count, Raw_buffer::Access_frequency frequency) : m_count(count) {
+        auto draw_type = GL_Raw_buffer::calc_draw_type(frequency, Raw_buffer::Access_type::DRAW);
+        /*glCreateBuffers(1, &this->m_buffer_ID);
         this->bind();
+        /// TODO Enable index buffer layouts.
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
+         */
+        this->m_buffer_ID = GL_Raw_buffer::init(indices, count, draw_type, GL_ARRAY_BUFFER);
     }
 
     GL_index_buffer::~GL_index_buffer() {
@@ -188,6 +192,12 @@ namespace Cecilion {
     void GL_index_buffer::unbind() {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
+
+    void GL_index_buffer::reset_buffer(uint32_t *vertices, uint32_t size) {
+        GL_Raw_buffer::reset_buffer(GL_ELEMENT_ARRAY_BUFFER, this->m_buffer_ID, vertices, size, GL_STATIC_DRAW);
+        this->m_count = size;
+    }
+
 
     /// -------------- Uniform buffer --------------
 

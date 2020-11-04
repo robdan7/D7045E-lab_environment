@@ -28,14 +28,14 @@ namespace Cecilion {
      * @param count
      * @return
      */
-    std::shared_ptr<Index_buffer> Cecilion::Index_buffer::Create(uint32_t *indices, uint32_t count) {
+    std::shared_ptr<Index_buffer> Cecilion::Index_buffer::Create(uint32_t *indices, uint32_t count,Raw_buffer::Access_frequency frequency) {
         //switch (Render::Renderer::get_API()) {
         //    case Render::Renderer_API::API::None :
                 //CORE_ASSERT(false, "Renderer::Buffer:: No render API is defined!");
         //        std::cout << "Renderer::Buffer:: No render API is defined!" << std::endl;
         //        break;
         //    case Render::Renderer_API::API::OpenGL:
-                return std::static_pointer_cast<Index_buffer>(std::make_shared<GL_index_buffer>(indices, count));
+                return std::static_pointer_cast<Index_buffer>(std::make_shared<GL_index_buffer>(indices, count,frequency));
         //}
         //CORE_ASSERT(false, "Unknown Renderer_API!");
         //std::cout << "Renderer::Buffer:: Unknown Renderer_API!" << std::endl;

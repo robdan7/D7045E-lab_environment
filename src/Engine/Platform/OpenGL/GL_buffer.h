@@ -80,11 +80,14 @@ namespace Cecilion {
 
     class GL_index_buffer : public Index_buffer {
     public:
-        GL_index_buffer(uint32_t* indices, uint32_t count);
+        GL_index_buffer(uint32_t* indices, uint32_t count, Raw_buffer::Access_frequency frequency);
         ~GL_index_buffer() override;
         void bind() override;
         void unbind() override;
         uint32_t get_count() const override {return this->m_count;}
+
+        void reset_buffer(uint32_t *vertices, uint32_t size) override;
+
     private:
         uint32_t m_buffer_ID;
         uint32_t m_count;

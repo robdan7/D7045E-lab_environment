@@ -14,7 +14,7 @@ namespace Cecilion {
         unsigned int width, height;
 
         Window_properties(
-                const std::string &title = "Cecilion engine",
+                const std::string &title = "Demo window",
                 unsigned int width = 1280,
                 unsigned int height = 720,
                 GLFW_context* context = nullptr) :
