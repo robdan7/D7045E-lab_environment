@@ -32,7 +32,7 @@ namespace Engine {
 
         void resize_buffer(uint32_t size) override;
 
-        void set_sub_data(float *vertices,uint32_t offset, uint32_t size) override;
+        void set_sub_data(void *vertices, uint32_t offset, uint32_t size) override;
         uint32_t get_ID() override {return this->m_buffer_ID;}
 
         void dump_to_file(const char *file) override;
@@ -61,7 +61,7 @@ namespace Engine {
 
         void reset_buffer(float *vertices, uint32_t size) override;
 
-        void set_sub_data(float *vertices, uint32_t offset, uint32_t size) override;
+        void set_sub_data(void *vertices, uint32_t offset, uint32_t size) override;
 
         void resize_buffer(uint32_t size) override;
         inline uint32_t get_binding_point() {return this->m_binding_point;}

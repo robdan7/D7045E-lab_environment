@@ -128,6 +128,11 @@ int main(int argc, char** argv) {
     /// -------- Window and uniforms --------
     auto window = std::shared_ptr<Engine::Window>(Engine::Window::create_window());
     Global_uniforms* uniforms = new Global_uniforms();   /// LoL. This throws an exception unless I use a pointer and I Don't know why :/
+    /*
+    float data[] = {1,0,0,1.0f};
+
+    auto unf = Engine::Constant_buffer::Create(data,sizeof(data),Engine::Raw_buffer::Access_frequency::DYNAMIC, Engine::Raw_buffer::Access_type::DRAW);
+*/
 
     /// -------- Shaders --------
     auto vertex = Engine::Shader::create_shader_stage(
@@ -143,7 +148,7 @@ int main(int argc, char** argv) {
             } my_block;
 
             void main() {
-                gl_Position =my_block.view_matrix * my_block.transform_matrix * position;
+                gl_Position = my_block.view_matrix*my_block.transform_matrix*position;
             }
 
             )");
@@ -200,7 +205,8 @@ int main(int argc, char** argv) {
 
     /// Initialize camera uniform matrix.
     uniforms->view_matrix.m_data = camera.get_view_projection_matrix();
-    uniforms->write((Engine::I_data<void *> *) &uniforms->view_matrix);
+    uniforms->update_view_matrix();
+    //uniforms->write((Engine::I_data<void *> *) &uniforms->view_matrix);
 
     /// -------- GUI --------
     auto gui = Engine::ImGui_layer(window);
@@ -231,7 +237,7 @@ int main(int argc, char** argv) {
 
 
         /// Update transform uniform.
-        uniforms->write((Engine::I_data<void *> *) &uniforms->transform_matrix);
+        uniforms->update_transform_matrix();
 
         /// Clear frame buffer and update GUI
         Engine::Render::Render_command::clear();
@@ -240,13 +246,13 @@ int main(int argc, char** argv) {
 
         /// Draw filled snowflake.
         uniforms->color.m_data = red;
-        uniforms->write((Engine::I_data<void *> *) &uniforms->color);
+        uniforms->update_color();
         triangle_vertex_array->bind();
         glDrawElements(GL_TRIANGLES,index_buffer->get_count()/sizeof(uint32_t),GL_UNSIGNED_INT, nullptr);
 
         /// Draw snowflake lines.
         uniforms->color.m_data = black;
-        uniforms->write((Engine::I_data<void *> *) &uniforms->color);
+        uniforms->update_color();
         line_vertex_array->bind();
         glDrawArrays(GL_LINE_STRIP,0,line_vertex_array->get_vertex_buffer()[0]->get_size()/sizeof(float)/glm::vec2::length());
 

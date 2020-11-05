@@ -81,7 +81,7 @@ namespace Engine {
 //        Raw_buffer::set_size(size);
         }
 
-        static void set_sub_data(uint32_t type, uint32_t ID, float *vertices, uint32_t offset, uint32_t size) {
+        static void set_sub_data(uint32_t type, uint32_t ID, void *vertices, uint32_t offset, uint32_t size) {
             glBindBuffer(type, (GLuint)(ID));
             glBufferSubData(type, offset, size, vertices);
             glBindBuffer(type,0);
@@ -154,7 +154,7 @@ namespace Engine {
         this->set_size(size);
     }
 
-    void GL_vertex_buffer::set_sub_data(float *vertices, uint32_t offset,uint32_t size) {
+    void GL_vertex_buffer::set_sub_data(void *vertices, uint32_t offset, uint32_t size) {
         GL_Raw_buffer::set_sub_data(GL_ARRAY_BUFFER,this->m_buffer_ID, vertices, offset, size);
     }
 
@@ -216,7 +216,7 @@ namespace Engine {
         this->set_size(size);
     }
 
-    void GL_constant_buffer::set_sub_data(float *vertices, uint32_t offset, uint32_t size) {
+    void GL_constant_buffer::set_sub_data(void *vertices, uint32_t offset, uint32_t size) {
         GL_Raw_buffer::set_sub_data(GL_UNIFORM_BUFFER,this->m_buffer_ID, vertices, offset, size);
     }
 

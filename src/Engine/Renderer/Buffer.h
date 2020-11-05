@@ -198,7 +198,7 @@ namespace Engine {
         virtual void unbind() = 0;
 
         virtual void reset_buffer(float* vertices,uint32_t size) = 0;
-        virtual void set_sub_data(float* vertices,uint32_t offset, uint32_t size) = 0;
+        virtual void set_sub_data(void *vertices, uint32_t offset, uint32_t size) = 0;
         virtual void resize_buffer(uint32_t size) = 0;
 
         uint32_t get_size() {return this->m_size;}

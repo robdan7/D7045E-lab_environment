@@ -2,67 +2,16 @@
 
 #include "ImGui_build.h"
 //#include <Platform/OpenGL/imgui_impl_opengl3.h>
+#include <Core/Window.h>
 #include <Platform/OpenGL/OpenGL.h>
 
 //#include <Event/Async_inbox.h>
 #include "ImGui_panel.h"
 // TODO Make sure the ImGui interface can handle multiple threads.
 namespace Engine {
-    //std::vector<std::shared_ptr<ImGui_panel>> ImGui_layer::s_panels = std::vector<std::shared_ptr<ImGui_panel>>();
-    //std::vector<std::shared_ptr<ImGui_panel>> ImGui_layer::s_append_layer_stack = std::vector<std::shared_ptr<ImGui_panel>>();
-    //std::vector<std::shared_ptr<ImGui_panel>> ImGui_layer::s_delete_stack = std::vector<std::shared_ptr<ImGui_panel>>();
-    //std::shared_ptr<ImGui_layer> ImGui_layer::s_gui_layer = nullptr;
-/*
-    void ImGui_layer::on_attach() {
-        //CORE_ASSERT(!this->p_parent, "Layer was attached without a parent!");
-
-
-        // Setup Dear ImGui context
-        IMGUI_CHECKVERSION();
-        ImGui::CreateContext();
-        ImGuiIO& io = ImGui::GetIO(); (void)io;
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_DockingEnable;
-        ImGui::StyleColorsDark();
-        ImGuiStyle& style = ImGui::GetStyle();
-
-
-        Application& app = Application::get();
-        GLFWwindow* window = static_cast<GLFWwindow*>(app.get_window().get_native_window());
-
-        // Setup Platform/Renderer bindings
-        ImGui_ImplGlfw_InitForOpenGL(window, true);
-        ImGui_ImplOpenGL3_Init("#version 410");
-    }
-    */
-
-//    void ImGui_layer::on_detach() {
-//        ImGui_ImplOpenGL3_Shutdown();
-//        ImGui_ImplGlfw_Shutdown();
-//        ImGui::DestroyContext();
-//    }
-
-//    void ImGui_layer::on_update() {
-//        Application_layer_st::on_update();
-//
-//        ImGuiIO& io = ImGui::GetIO();
-//        Application& app = Application::get();
-//        io.DisplaySize = ImVec2(app.get_window().get_width(), app.get_window().get_height());
-//
-//        float time = (float)glfwGetTime();
-//        io.DeltaTime = this->m_time > 0.0f ? (time - this->m_time) : (1.0f / 60.0f);
-//        this->m_time = time;
-//
-//        ImGui_ImplOpenGL3_NewFrame();
-//        ImGui::NewFrame();
-//
-//        static bool show = true;
-//        ImGui::ShowDemoWindow(&show);
-//
-//        ImGui::Render();
-//        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-//    }
 
     void ImGui_layer::begin() {
+
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
@@ -90,6 +39,7 @@ namespace Engine {
         if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
             window_flags |= ImGuiWindowFlags_NoBackground;
 
+        /// TODO Delete this stuff. We don't need docking for these labs.
         // Important: note that we proceed even if Begin() returns false (aka window is collapsed).
         // This is because we want to keep our DockSpace() active. If a DockSpace() is inactive,
         // all active windows docked into it will lose their parent and become undocked.
@@ -105,35 +55,11 @@ namespace Engine {
         //ImGuiID dockspace_id = ImGui::GetID("DockSpace");
         //ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
 
-        /*
-        if (ImGui::BeginMenuBar()) {
-            if (ImGui::BeginMenu("File")) {
-                //if (ImGui::MenuItem("Exit")) Engine::Event_system::post<Engine::Window_close_event>();
-                ImGui::Separator();
-                ImGui::EndMenu();
-            }
-            if (ImGui::BeginMenu("View")) {
-                //if (ImGui::MenuItem("Exit")) Engine::Event_system::post<Engine::Window_close_event>();
-                ImGui::Separator();
-                ImGui::EndMenu();
-            }
-            if (ImGui::BeginMenu("Dummy")) {
-                //if (ImGui::MenuItem("Exit")) Engine::Event_system::post<Engine::Window_close_event>();
-                ImGui::Separator();
-                ImGui::EndMenu();
-            }
-            ImGui::EndMenuBar();
-        }
 
-        //ImGui::End();
-         */
+
     }
 
     void ImGui_layer::end() {
-//        ImGuiIO& io = ImGui::GetIO();
-//        Application& app = Application::get();
-//        io.DisplaySize = ImVec2(app.get_window().get_width(), app.get_window().get_height());
-
         /// Rendering
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -230,15 +156,13 @@ namespace Engine {
 
     ImGui_layer::ImGui_layer(std::shared_ptr<Engine::Window> window) {
         // Setup Dear ImGui context
+
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO(); (void)io;
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_DockingEnable;
         ImGui::StyleColorsDark();
         ImGuiStyle& style = ImGui::GetStyle();
-
-        // Setup Platform/Renderer bindings
-
 
         ImGui_ImplGlfw_InitForOpenGL(static_cast<GLFWwindow*>(window->get_native_window()), true);
         ImGui_ImplOpenGL3_Init("#version 410");

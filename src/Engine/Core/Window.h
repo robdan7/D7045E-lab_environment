@@ -2,6 +2,7 @@
 #include <string>
 #include <Renderer/GLFW_context.h>
 
+
 namespace Engine {
     /**
      * Abstract window class for Engine. The engine doesn't care what kind of window we're using.

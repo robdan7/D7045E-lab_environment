@@ -2,10 +2,11 @@
 
 #include <vector>
 #include <memory>
-#include <Core/Window.h>
+//#include <Core/Window.h>
 //#include <Core/Layers/Application_layer_st.h>
 
 namespace Engine {
+    class Window;
     class ImGui_panel;
     class ImGui_layer {
         friend class ImGui_panel;

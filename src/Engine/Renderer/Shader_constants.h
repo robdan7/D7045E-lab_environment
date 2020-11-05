@@ -28,7 +28,9 @@ namespace Engine {
         uint32_t offset;
         Data m_data;
     public:
-        const Data* get_data() {return &this->m_data;}
+        const Data* get_data() {
+            return &this->m_data;
+        }
         [[nodiscard]] uint32_t get_offset() const {return offset;}
         virtual uint32_t stride() {return sizeof(this->m_data);}
         const uint32_t get_offset() {return this->offset;}
@@ -41,152 +43,53 @@ namespace Engine {
     };
 
     struct Float_data : public I_data<float>{
-//        friend Data_governor<Float_data>;
         Float_data(uint32_t offset, const char* name, bool normalized = false) : I_data(offset, Engine::Shader_data::Float, name, normalized){}
-//        Float_data(Float_data &&other) : I_data(static_cast<I_data&&>(other)) {
-//            this->my_float = other.my_float;
-//        }
-//        const float* get_data() {
-//            return &this->my_float;
-//        }
-
-//        uint32_t stride() override {
-//            return sizeof(my_float);
-//        }
-//    private:
-//        float my_float = 0;
     };
 
     struct Float2_data : public I_data<glm::vec2>{
-//        friend Data_governor<Float2_data>;
         Float2_data(uint32_t offset, const char* name, bool normalized = false) : I_data(offset, Engine::Shader_data::Float, name, normalized){}
-//        Float2_data(Float2_data &&other) : I_data(static_cast<I_data&&>(other)) {
-//            this->m_vec2 = other.m_vec2;
-//        }
-//        const glm::vec2* get_data() {
-//            return &this->m_vec2;
-//        }
-
-//        uint32_t stride() override {
-//            return sizeof(m_vec2);
-//        }
-//    private:
-//        glm::vec2 m_vec2 = glm::vec2();
     };
 
     struct Float3_data : public I_data<glm::vec3>{
-//        friend Data_governor<Float3_data>;
         Float3_data(uint32_t offset, const char* name, bool normalized = false) : I_data(offset, Engine::Shader_data::Float, name, normalized){}
-//        Float3_data(Float3_data &&other) : I_data(static_cast<I_data&&>(other)) {
-//            this->m_vec3 = other.m_vec3;
-//        }
-//        const glm::vec3* get_data() {
-//            return &this->m_vec3;
-//        }
-
-//        uint32_t stride() override {
-//            return sizeof(m_vec3);
-//        }
-//    private:
-//        glm::vec3 m_vec3 = glm::vec3();
     };
 
     struct Float4_data : public I_data<glm::vec4>{
-//        friend Data_governor<Float4_data>;
         Float4_data(uint32_t offset, const char* name, bool normalized = false) : I_data(offset, Engine::Shader_data::Float, name, normalized){}
-//        Float4_data(Float4_data &&other) : I_data(static_cast<I_data&&>(other)) {
-//            this->m_vec3 = other.m_vec3;
-//        }
-//        const glm::vec4* get_data() {
-//            return &this->m_vec3;
-//        }
-
-//        uint32_t stride() override {
-//            return sizeof(m_vec3);
-//        }
-//    private:
-//        glm::vec4 m_vec3 = glm::vec4();
     };
 
     struct Int_data : public I_data<int> {
-//        friend Data_governor<Int_data>;
         Int_data(uint32_t offset, const char* name, bool normalized = false) : I_data(offset, Engine::Shader_data::Int, name, normalized){}
-//        Int_data(Int_data &&other) : I_data(static_cast<I_data&&>(other)) {
-//            this->m_int = other.m_int;
-//        }
-//        const int *get_data()  {
-//            return &this->m_int;
-//        }
-
-//        uint32_t stride() override  {return sizeof(this->m_int);}
-//    private:
-//        int m_int = 0;
     };
 
     struct Int2_data : public I_data<glm::ivec2> {
-//        friend Data_governor<Int2_data>;
         Int2_data(uint32_t offset, const char* name, bool normalized = false) : I_data(offset, Engine::Shader_data::Int, name, normalized){}
-//        Int2_data(Int2_data &&other) : I_data(static_cast<I_data&&>(other)) {
-//            this->m_int2 = other.m_int2;
-//        }
-//        const glm::ivec2 *get_data()  {
-//            return &this->m_int2;
-//        }
-
-//        uint32_t stride() override {return sizeof(this->m_int2);}
-//    private:
-//        glm::ivec2 m_int2 = glm::ivec2();
     };
 
     struct Int3_data : public I_data<glm::ivec3> {
-//        friend Data_governor<Int3_data>;
         Int3_data(uint32_t offset, const char* name, bool normalized = false) : I_data(offset, Engine::Shader_data::Int, name, normalized){}
-//        Int3_data(Int3_data &&other) : I_data(static_cast<I_data&&>(other)) {
-//            this->m_int2 = other.m_int2;
-//        }
-//        const glm::ivec3 *get_data() {
-//            return &this->m_int2;
-//        }
-
-//        uint32_t stride() override {return sizeof(this->m_int2);}
-//    private:
-//        glm::ivec3 m_int2 = glm::ivec3();
     };
 
     struct Int4_data : public I_data<glm::ivec4> {
-//        friend Data_governor<Int4_data>;
         Int4_data(uint32_t offset, const char* name, bool normalized = false) : I_data(offset, Engine::Shader_data::Int, name, normalized){}
-//        Int4_data(Int4_data &&other) : I_data(static_cast<I_data&&>(other)) {
-//            this->m_int3 = other.m_int3;
-//        }
-//        const glm::ivec4 *get_data() override {
-//            return &this->m_int3;
-//        }
-
-//        uint32_t stride() override {return sizeof(this->m_int3);}
-//    private:
-//        glm::ivec4 m_int3 = glm::ivec4();
     };
 
 
     struct Matrix4_data : public I_data<glm::mat4x4> {
-//        friend Data_governor<Matrix4_data>;
         Matrix4_data(uint32_t offset, const char* name, bool normalized = false) : I_data(offset, Engine::Shader_data::Mat4, name, normalized){}
-//        Matrix4_data(Matrix4_data &&other) : I_data(static_cast<I_data&&>(other)) {
-//            this->my_matrix = other.my_matrix;
-//        }
-
-//        const glm::mat4x4 *get_data() {
-//            return &this->my_matrix;
-//        }
-
-//        uint32_t stride() override {return sizeof(my_matrix);}
-//    private:
-//        glm::mat4x4 my_matrix = glm::mat4x4(1.0f);
     };
 
 
 /// ------- Base class for shader params ------
+
+/**
+ * The code below is used to create object-oriented uniform blocks. It's still a work in progress.
+ *
+ * Start with BEGIN_SHADER_CONST and the name of the struct you want. Add individual uniforms with
+ * SET_SHADER_CONST and finish everything with END_SHADER_CONST.
+ *
+ * Every uniform you add will be put in a shared buffer that automatically enforces the std140 layout.
+ */
 
     struct I_shader_constant_container {
     private:
@@ -199,7 +102,7 @@ namespace Engine {
             return std::move(a);
         }
     public:
-        virtual void write(I_data<void*>* data) = 0;
+        //virtual void write(I_data<void*>* data) = 0;
         [[nodiscard]] uint32_t get_size() const {return this->size;}
         I_shader_constant_container() = default;
     };
@@ -207,12 +110,11 @@ namespace Engine {
 
 #define BEGIN_SHADER_CONST(Name) struct Name : public ::Engine::I_shader_constant_container {\
 Name() : I_shader_constant_container() {this->m_buffer = ::Engine::Constant_buffer::Create(nullptr, this->get_size(), ::Engine::Vertex_buffer::Access_frequency::DYNAMIC, ::Engine::Vertex_buffer::Access_type::DRAW);} \
-public: void write(::Engine::I_data<void*>* data) override  { \
-    this->m_buffer->set_sub_data((float*)data->get_data(), data->get_offset(),data->stride());\
-} \
-std::shared_ptr<Engine::Constant_buffer> m_buffer;\
+public: std::shared_ptr<Engine::Constant_buffer> m_buffer;\
 public:
-#define SET_SHADER_CONST(type, name) type name = this->set_arg<type>(#name);
+#define SET_SHADER_CONST(type, name) type name = this->set_arg<type>(#name); \
+    void update_##name() {this->m_buffer->set_sub_data((void*)this->name.get_data(), this->name.get_offset(),this->name.stride());}
+
 #define END_SHADER_CONST(Name) };
 
     /**
