@@ -103,6 +103,7 @@ void create_snowflake(const std::shared_ptr<Engine::Vertex_buffer>& vertex_buffe
     index_buffer->reset_buffer(&triangle_indices[0], sizeof(uint32_t) * triangle_indices.size());
 }
 
+
 class Slider_panel : public Engine::ImGui_panel {
 public:
     void on_imgui_render() override {
@@ -126,7 +127,7 @@ private:
 int main(int argc, char** argv) {
     /// -------- Window and uniforms --------
     auto window = std::shared_ptr<Engine::Window>(Engine::Window::create_window());
-    auto uniforms = Global_uniforms();
+    Global_uniforms* uniforms = new Global_uniforms();   /// LoL. This throws an exception unless I use a pointer and I Don't know why :/
 
     /// -------- Shaders --------
     auto vertex = Engine::Shader::create_shader_stage(
@@ -198,8 +199,8 @@ int main(int argc, char** argv) {
     camera.on_update(); /// This is the only update needed.
 
     /// Initialize camera uniform matrix.
-    uniforms.view_matrix.m_data = camera.get_view_projection_matrix();
-    uniforms.write((Engine::I_data<void *> *) &uniforms.view_matrix);
+    uniforms->view_matrix.m_data = camera.get_view_projection_matrix();
+    uniforms->write((Engine::I_data<void *> *) &uniforms->view_matrix);
 
     /// -------- GUI --------
     auto gui = Engine::ImGui_layer(window);
@@ -220,17 +221,17 @@ int main(int argc, char** argv) {
     while (!window->should_close()) {
         angle = std::fmod(angle+0.025f,8*PI);   /// Reset angle after 1 full rotation around window center.
         /// Circle around window center
-        uniforms.transform_matrix.m_data = glm::rotate(glm::mat4(1.0f), 0.25f*angle, glm::vec3(0, 0, 1));
-        uniforms.transform_matrix.m_data = glm::translate(uniforms.transform_matrix.m_data, glm::vec3(0.75f,0,0));
+        uniforms->transform_matrix.m_data = glm::rotate(glm::mat4(1.0f), 0.25f*angle, glm::vec3(0, 0, 1));
+        uniforms->transform_matrix.m_data = glm::translate(uniforms->transform_matrix.m_data, glm::vec3(0.75f,0,0));
         /// Rotate around object origin.
-        uniforms.transform_matrix.m_data = glm::rotate(uniforms.transform_matrix.m_data, angle, glm::vec3(0, 0, 1));
+        uniforms->transform_matrix.m_data = glm::rotate(uniforms->transform_matrix.m_data, angle, glm::vec3(0, 0, 1));
 
         float scale = sin(angle) * 0.5f + 1;
-        uniforms.transform_matrix.m_data = glm::scale(uniforms.transform_matrix.m_data, glm::vec3(scale, scale, scale));
+        uniforms->transform_matrix.m_data = glm::scale(uniforms->transform_matrix.m_data, glm::vec3(scale, scale, scale));
 
 
         /// Update transform uniform.
-        uniforms.write((Engine::I_data<void *> *) &uniforms.transform_matrix);
+        uniforms->write((Engine::I_data<void *> *) &uniforms->transform_matrix);
 
         /// Clear frame buffer and update GUI
         Engine::Render::Render_command::clear();
@@ -238,14 +239,14 @@ int main(int argc, char** argv) {
         shader_program->bind();
 
         /// Draw filled snowflake.
-        uniforms.color.m_data = red;
-        uniforms.write((Engine::I_data<void *> *) &uniforms.color);
+        uniforms->color.m_data = red;
+        uniforms->write((Engine::I_data<void *> *) &uniforms->color);
         triangle_vertex_array->bind();
         glDrawElements(GL_TRIANGLES,index_buffer->get_count()/sizeof(uint32_t),GL_UNSIGNED_INT, nullptr);
 
         /// Draw snowflake lines.
-        uniforms.color.m_data = black;
-        uniforms.write((Engine::I_data<void *> *) &uniforms.color);
+        uniforms->color.m_data = black;
+        uniforms->write((Engine::I_data<void *> *) &uniforms->color);
         line_vertex_array->bind();
         glDrawArrays(GL_LINE_STRIP,0,line_vertex_array->get_vertex_buffer()[0]->get_size()/sizeof(float)/glm::vec2::length());
 

@@ -60,7 +60,8 @@ namespace Engine {
 
         )";
 
-        std::string data[this->m_result_buffer->get_layout().get_elements().size()];
+        //std::string data[this->m_result_buffer->get_layout().get_elements().size()];
+        std::vector<std::string> data(this->m_result_buffer->get_layout().get_elements().size());
         std::vector<Buffer_element>::const_iterator iterator = this->m_result_buffer->get_layout().begin();
         int i = 0;
         while (iterator != this->m_result_buffer->get_layout().end()) {

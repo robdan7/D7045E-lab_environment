@@ -34,7 +34,7 @@ namespace Engine {
             case Shader_data::Bool:     return 1;
         }
         //CORE_ASSERT(false, "Unknown Shader data type!");
-        std::cout << "Renderer::Buffer:: Unknown Shader data type!" << std::endl;
+        std::cout << "Renderer::Buffer:: Unknown base shader data type!" << std::endl;
         return 0;
     }
 
@@ -59,13 +59,16 @@ namespace Engine {
             case Shader_data::Bool:     return 1;
         }
         //CORE_ASSERT(false, "Unknown Shader data type!");
-        std::cout << "Renderer::Buffer:: Unknown Shader data type!" << std::endl;
+        std::cout << "Renderer::Buffer:: Unknown Shader data count type!" << std::endl;
+        /*if (type == Shader_data::None) {
+            std::cout
+        }*/
         return 0;
     }
 
     static char* get_shader_data_string(const Shader_data &type) {
-        switch(Render::Renderer_API::get_API()) {
-            case Render::Renderer_API::API::OpenGL:
+        //switch(Render::Renderer_API::get_API()) {
+            //case Render::Renderer_API::API::OpenGL:
                 switch (type) {
                     case Shader_data::Float:    return "float";
                     case Shader_data::Float2:   return "vec2";
@@ -79,12 +82,13 @@ namespace Engine {
                     case Shader_data::Int4:     return "ivec4";
                     case Shader_data::Bool:     return "bool";
                 }
-                break;
-            case Render::Renderer_API::API::None:
+            //   break;
+            //case Render::Renderer_API::API::None:
                 //CORE_ASSERT(false, "Renderer::Buffer:: Could not find a render API!");
                 std::cout << "Renderer::Buffer:: Could not find a render API!" << std::endl;
-                break;
-        }
+              //  break;
+              //  */
+        //}
         return "";
     }
 

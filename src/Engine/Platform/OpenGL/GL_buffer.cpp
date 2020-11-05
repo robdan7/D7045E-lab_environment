@@ -60,14 +60,14 @@ namespace Engine {
         static uint32_t init(void *vertices, uint32_t size, uint32_t draw_type, uint32_t gl_type) {
             uint32_t ID = 0;
             glCreateBuffers(1, &ID);
-            glBindBuffer(gl_type, reinterpret_cast<GLuint>(ID));
+            glBindBuffer(gl_type, (GLuint)(ID));
             glBufferData(gl_type, size, vertices, draw_type);
             glBindBuffer(gl_type, 0);
             return ID;
         }
 
         static void bind(uint32_t type, uint32_t ID) {
-            glBindBuffer(type, reinterpret_cast<GLuint>(ID));
+            glBindBuffer(type, (GLuint)(ID));
         }
 
         static void unbind(uint32_t type) {
@@ -75,41 +75,43 @@ namespace Engine {
         }
 
         static void reset_buffer(uint32_t type, uint32_t ID, void *vertices, uint32_t size, uint32_t draw_type) {
-            glBindBuffer(type, reinterpret_cast<GLuint>(ID));
+            glBindBuffer(type, (GLuint)(ID));
             glBufferData(type, size, vertices, draw_type);
             glBindBuffer(type,0);
 //        Raw_buffer::set_size(size);
         }
 
         static void set_sub_data(uint32_t type, uint32_t ID, float *vertices, uint32_t offset, uint32_t size) {
-            glBindBuffer(type, reinterpret_cast<GLuint>(ID));
+            glBindBuffer(type, (GLuint)(ID));
             glBufferSubData(type, offset, size, vertices);
             glBindBuffer(type,0);
         }
 
-        static void resize_buffer(uint32_t type, uint32_t ID, uint32_t old_size, uint32_t new_size, uint32_t draw_type) {
+        static void resize_buffer(uint32_t type, uint32_t ID, uint32_t old_size, const int new_size, uint32_t draw_type) {
 
-            glBindBuffer(GL_COPY_READ_BUFFER, reinterpret_cast<GLuint>(ID));
-            uint8_t data[new_size];
+            glBindBuffer(GL_COPY_READ_BUFFER, (GLuint)(ID));
+            //uint8_t data[new_size];
+            std::vector<uint8_t> data(new_size);
             glGetBufferSubData(GL_COPY_READ_BUFFER, 0, old_size < new_size ? old_size : new_size, &data);
-            reset_buffer(type, ID, (float*)data, new_size, draw_type);
+            reset_buffer(type, ID, (float*)&data[0], new_size, draw_type);
 
             glBindBuffer(GL_COPY_READ_BUFFER, 0);
         }
 
         static void delete_buffer(uint32_t ID) {
-            glDeleteBuffers(1, reinterpret_cast<const GLuint *>(&ID));
+            glDeleteBuffers(1, static_cast<const GLuint *>(&ID));
         }
 
         static void dump_to_file(const char* file, uint32_t ID, uint32_t size) {
-            glBindBuffer(GL_COPY_READ_BUFFER, reinterpret_cast<GLuint>(ID));
-            char data[size];
+            glBindBuffer(GL_COPY_READ_BUFFER, (GLuint)(ID));
+            //char data[size];
+            std::vector<char> data(size);
             glGetBufferSubData(GL_COPY_READ_BUFFER, 0, size, &data);
 
             /// Get transform feedback primitives.
             std::ofstream output_file;
             output_file.open(file);
-            output_file.write(data, size);
+            output_file.write(&data[0], size);
             output_file.close();
         }
 
@@ -186,7 +188,7 @@ namespace Engine {
     }
 
     void GL_index_buffer::bind() {
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, reinterpret_cast<GLuint>(this->m_buffer_ID));
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, (GLuint)(this->m_buffer_ID));
     }
 
     void GL_index_buffer::unbind() {

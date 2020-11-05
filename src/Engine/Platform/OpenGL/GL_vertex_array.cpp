@@ -1,5 +1,6 @@
 #include "GL_vertex_array.h"
 #include <Platform/OpenGL/OpenGL.h>
+#include <algorithm>
 namespace Engine {
     GL_vertex_array::GL_vertex_array() {
         glCreateVertexArrays(1, &this->m_render_ID);

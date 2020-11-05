@@ -239,6 +239,7 @@ namespace Engine {
 
         // Setup Platform/Renderer bindings
 
+
         ImGui_ImplGlfw_InitForOpenGL(static_cast<GLFWwindow*>(window->get_native_window()), true);
         ImGui_ImplOpenGL3_Init("#version 410");
     }
