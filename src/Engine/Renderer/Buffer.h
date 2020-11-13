@@ -60,9 +60,6 @@ namespace Engine {
         }
         //CORE_ASSERT(false, "Unknown Shader data type!");
         std::cout << "Renderer::Buffer:: Unknown Shader data count type!" << std::endl;
-        /*if (type == Shader_data::None) {
-            std::cout
-        }*/
         return 0;
     }
 

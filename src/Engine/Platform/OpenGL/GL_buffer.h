@@ -44,8 +44,6 @@ namespace Engine {
         int m_divisor = 0;
         uint32_t m_GL_draw_type;
         uint32_t m_buffer_ID;
-//        int m_divisor = 0;
-//        uint32_t m_GL_draw_type;
     };
 
     /**
