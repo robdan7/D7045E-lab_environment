@@ -8,7 +8,7 @@
 
 namespace Engine {
     enum class Shader_data {
-        None = 0, Float, Float2, Float3, Float4, Mat3, Mat4, Int, Int2, Int3, Int4, Bool
+        None = 0, Float, Float2, Float3, Float4, Double, Double2, Double3, Double4, Mat3, Mat4, Int, Int2, Int3, Int4, Bool
     };
 
 
@@ -25,6 +25,10 @@ namespace Engine {
             case Shader_data::Float2:   return 2;
             case Shader_data::Float3:   return 3;
             case Shader_data::Float4:   return 4;
+            case Shader_data::Double:    return 2;
+            case Shader_data::Double2:   return 4;
+            case Shader_data::Double3:   return 6;
+            case Shader_data::Double4:   return 8;
             case Shader_data::Mat3:     return 3*3;
             case Shader_data::Mat4:     return 4*4;
             case Shader_data::Int:      return 1;
@@ -50,6 +54,10 @@ namespace Engine {
             case Shader_data::Float2:   return 2;
             case Shader_data::Float3:   return 3;
             case Shader_data::Float4:   return 4;
+            case Shader_data::Double:    return 2;
+            case Shader_data::Double2:   return 4;
+            case Shader_data::Double3:   return 6;
+            case Shader_data::Double4:   return 8;
             case Shader_data::Mat3:     return 3;
             case Shader_data::Mat4:     return 4;
             case Shader_data::Int:      return 1;
@@ -71,6 +79,10 @@ namespace Engine {
                     case Shader_data::Float2:   return "vec2";
                     case Shader_data::Float3:   return "vec3";
                     case Shader_data::Float4:   return "vec4";
+                    case Shader_data::Double:    return "double";
+                    case Shader_data::Double2:   return "dvec2";
+                    case Shader_data::Double3:   return "dvec3";
+                    case Shader_data::Double4:   return "dvec4";
                     case Shader_data::Mat3:     return "mat3";
                     case Shader_data::Mat4:     return "mat4";
                     case Shader_data::Int:      return "int";
