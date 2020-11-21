@@ -4,11 +4,26 @@ namespace Lab2 {
     struct Vertex {
         float x,y;
         Vertex(float x =0, float y = 0);
+        /**
+         *
+         * @param a
+         * @param b
+         * @param c
+         * @return True if the line ac is on the right side of ab
+         */
         static bool left(Vertex& a, Vertex& b, Vertex& c);
+        /**
+         *
+         * @param a
+         * @param b
+         * @param c
+         * @return True if the line ac is one the left side of ab.
+         */
         static bool right(Vertex& a, Vertex& b, Vertex& c);
         static bool on(Vertex& a, Vertex& b, Vertex& c);
         Vertex operator+(Vertex& other) const;
         Vertex operator-(Vertex& other) const;
+        bool operator==(Vertex& other) const;
     //private:
         static double z_cross_product(Vertex& a, Vertex& b);
     };

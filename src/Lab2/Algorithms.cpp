@@ -70,10 +70,10 @@ namespace Lab2 {
         return std::move(line_strip);
     }
 
-    std::shared_ptr<Search_tree<Triangle>> build_helper(std::vector<uint32_t>& hull, std::vector<Triangle>& triangles, uint32_t start_index, uint32_t end_index) {
+    std::shared_ptr<Search_tree<Triangle>> build_helper(std::vector<uint32_t>& hull,std::vector<Vertex>& vertices, std::vector<Triangle>& triangles, uint32_t start_index, uint32_t end_index) {
         if (end_index - start_index == 1) {
             /// Base case
-            triangles.emplace_back(hull[0], hull[start_index],hull[end_index]);
+            triangles.emplace_back(vertices[hull[0]], vertices[hull[start_index]],vertices[hull[end_index]]);
             auto leaf = std::make_shared<Leaf<Triangle>>(nullptr, &triangles.back());
             triangles.back().set_leaf(leaf);
             auto tree = std::make_shared<Search_tree<Triangle>>();
@@ -88,9 +88,9 @@ namespace Lab2 {
 
         auto tree = std::make_shared<Search_tree<Triangle>>();
         auto index = triangles.size();
-        tree->set_left_tree(build_helper(hull,triangles,start_index, split));
+        tree->set_left_tree(build_helper(hull,vertices,triangles,start_index, split));
         auto lower_size = triangles.size()-index;
-        tree->set_right_tree(build_helper(hull,triangles,split,end_index));
+        tree->set_right_tree(build_helper(hull,vertices,triangles,split,end_index));
 
         triangles[lower_size-1].ca = &triangles[lower_size];
         triangles[lower_size].ab = &triangles[lower_size-1];
@@ -99,7 +99,13 @@ namespace Lab2 {
     }
 
     std::shared_ptr<Search_tree<Triangle>> build(std::vector<uint32_t>& convex_hull, std::vector<Vertex>& vertices, std::vector<Triangle>& triangle_dest) {
-        return build_helper(convex_hull,  triangle_dest, 0, convex_hull.size()-1);
+        return build_helper(convex_hull,vertices,  triangle_dest, 1, convex_hull.size()-1);
+    }
+
+    void split(std::shared_ptr<Search_tree<Triangle>>& tree, std::vector<uint32_t>& vertex_indices, std::vector<Vertex>& vertices, std::vector<Triangle>& triangles) {
+        for (const auto& index : vertex_indices) {
+
+        }
     }
 
 }

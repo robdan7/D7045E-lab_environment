@@ -37,4 +37,8 @@ namespace Lab2 {
     Vertex Vertex::operator-(Vertex &other) const {
         return Vertex(this->x-other.x,this->y-other.y);
     }
+
+    bool Vertex::operator==(Vertex &other) const {
+        return this->x == other.x && this->y == other.y;
+    }
 }

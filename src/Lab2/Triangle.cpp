@@ -5,10 +5,19 @@ namespace Lab2 {
 
     };
 
-    Triangle::Triangle(uint32_t& a, uint32_t& b, uint32_t& c): a(a), b(b), c(c) {
+    Triangle::Triangle(Vertex& a, Vertex& b, Vertex& c): a(a), b(b), c(c) {
     }
 
     void Triangle::set_leaf(std::shared_ptr<Leaf<Triangle>> leaf) {
         this->leaf = leaf;
+    }
+
+    bool Triangle::is_inside(Vertex &v) {
+
+        return Vertex::left(this->a,this->b,v) && Vertex::left(this->b,this->c,v) && Vertex::left(this->c,this->a,v);
+    }
+
+    bool Triangle::on_edge(Vertex &v) {
+        return Vertex::on(this->a,this->b,v) || Vertex::on(this->b,this->c,v) || Vertex::on(this->c,this->a,v);
     }
 }

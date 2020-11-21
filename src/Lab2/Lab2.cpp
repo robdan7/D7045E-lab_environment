@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
     Global_uniforms uniforms;
 
     std::vector<Lab2::Vertex> list;
-    randomize_points(list,20);
+    randomize_points(list,10);
 
     Lab2::sort(list);
     std::vector<float> colors;
@@ -45,12 +45,16 @@ int main(int argc, char** argv) {
     std::vector<Lab2::Triangle> triangles;
     Lab2::build(hull_indices,list,triangles);
 
+
+    Lab2::Vertex& a= list[0];
+    //std::find(list.begin(),list.end(), a);
+
     std::vector<uint32_t> triangle_indices;
     float i = 0;
     for (const auto& tri : triangles) {
-        triangle_indices.push_back(tri.a);
-        triangle_indices.push_back(tri.b);
-        triangle_indices.push_back(tri.c);
+        triangle_indices.push_back(std::find(list.begin(),list.end(), tri.a)-list.begin());
+        triangle_indices.push_back(std::find(list.begin(),list.end(), tri.b)-list.begin());
+        triangle_indices.push_back(std::find(list.begin(),list.end(), tri.c)-list.begin());
 /*
         colors.push_back(0);
         colors.push_back(0);
@@ -163,24 +167,27 @@ int main(int argc, char** argv) {
         Engine::Render::Render_command::clear();
 
         shader_program->bind();
+        line_vertex_array->bind();
         /*
         uniforms.color.m_data = yellow;
         uniforms.update_color();
         glDrawElements(GL_TRIANGLE_FAN, index_buffer->get_count()/sizeof(uint32_t), GL_UNSIGNED_INT, nullptr);
         */
-        /*
+
         uniforms.color.m_data = red;
         uniforms.update_color();
         glDrawArrays(GL_POINTS, 0, list.size());
-        */
-        /*
+
+/*
         uniforms.color.m_data = black;
         uniforms.update_color();
-        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-        glDrawElements(GL_TRIANGLE_FAN, index_buffer->get_count()/sizeof(uint32_t), GL_UNSIGNED_INT, nullptr);
-        glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-        glDrawElements(GL_POINTS, index_buffer->get_count()/sizeof(uint32_t), GL_UNSIGNED_INT, nullptr);
-        */
+        //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+        glDrawElements(GL_LINE_STRIP, index_buffer->get_count()/sizeof(uint32_t), GL_UNSIGNED_INT, nullptr);
+        //glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+        //glDrawElements(GL_POINTS, index_buffer->get_count()/sizeof(uint32_t), GL_UNSIGNED_INT, nullptr);
+        line_vertex_array->unbind();
+*/
+
         triangle_fan->bind();
         uniforms.color.m_data = black;
         uniforms.update_color();
@@ -192,7 +199,8 @@ int main(int argc, char** argv) {
         uniforms.update_color();
         glDrawArrays(GL_POINTS, 0, list.size());
 
-        line_vertex_array->unbind();
+        triangle_fan->unbind();
+
         shader_program->unbind();
 
 

@@ -1,15 +1,43 @@
 #pragma once
 #include <memory>
+#include <functional>
+#include "Triangle.h"
 namespace Lab2 {
     template<class LEAF_TYPE>
+    class I_comparator {
+    public:
+        template<typename FUNC>
+        I_comparator(FUNC f) : f(f) {
+
+        }
+    private:
+        std::function<void()> f;
+    };
+    template<class LEAF_TYPE>
+    class Search_tree;
+
+    template<class LEAF_TYPE>
+    class I_node {
+        friend class Search_tree<LEAF_TYPE>;
+    public:
+        explicit I_node(std::shared_ptr<I_node<LEAF_TYPE>> parent) : parent(parent) {}
+        I_node() = default;
+    private:
+        std::shared_ptr<I_node> parent;
+        //std::shared_ptr<Node<LEAF_TYPE>> left, right;
+        std::vector<std::shared_ptr<I_node>> children;
+    };
+
+
+    template<class SEARCH_QUALIFIER>
     class Node;
     template<class LEAF_TYPE>
-    class Leaf : public Node<LEAF_TYPE> {
+    class Leaf : public I_node<LEAF_TYPE> {
     public:
-        Leaf(std::shared_ptr<Node<LEAF_TYPE>> node,LEAF_TYPE* data) : data(data), Node<LEAF_TYPE>(node) {}
+        Leaf(std::shared_ptr<I_node<LEAF_TYPE>> node,LEAF_TYPE* data) : data(data), I_node<LEAF_TYPE>(node) {}
         Leaf() = default;
 
-        const LEAF_TYPE* get_data() override {
+        const LEAF_TYPE* get_data() {
             return this->data;
         }
 
@@ -18,18 +46,11 @@ namespace Lab2 {
     };
 
     template<class LEAF_TYPE>
-    class Search_tree;
-
-    template<class LEAF_TYPE>
-    class Node {
-        friend class Search_tree<LEAF_TYPE>;
+    class Node : public I_node<LEAF_TYPE>{
     public:
-        explicit Node(std::shared_ptr<Node<LEAF_TYPE>> parent) : parent(parent) {}
-        Node() = default;
-        virtual const LEAF_TYPE* get_data() {return nullptr;}
-    private:
-        std::shared_ptr<Node<LEAF_TYPE>> parent;
-        std::shared_ptr<Node<LEAF_TYPE>> left, right;
+        Node(std::shared_ptr<I_node<LEAF_TYPE>> parent) : I_node<LEAF_TYPE>(parent) {}
+        explicit Node() : I_node<LEAF_TYPE>() {};
+
     };
 
     template<class LEAF_TYPE>
@@ -52,14 +73,16 @@ namespace Lab2 {
             this->root = std::make_shared<Node<LEAF_TYPE>>();
         }
         void set_left_tree(std::shared_ptr<Search_tree<LEAF_TYPE>> tree) {
-            this->root->left = tree->root;
-            this->root->left->parent = this->root;
+            root->children.push_back(tree->root);
+            root->children.back()->parent = this->root;
         }
 
         void set_right_tree(std::shared_ptr<Search_tree<LEAF_TYPE>> tree) {
-            this->root->right = tree->root;
-            this->root->right->parent = this->root;
+            root->children.push_back(tree->root);
+            root->children.back()->parent = this->root;
         }
+
+        //virtual LEAF_TYPE* find(const LEAF_TYPE& searchword) = 0;
 
     private:
         std::shared_ptr<Node<LEAF_TYPE>> root;
