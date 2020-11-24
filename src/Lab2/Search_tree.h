@@ -10,31 +10,19 @@ namespace Lab2 {
         I_comparator(FUNC f) : f(f) {
 
         }
+
     private:
-        std::function<void()> f;
+        std::function<void(LEAF_TYPE* a, LEAF_TYPE* b)> f;
     };
     template<class LEAF_TYPE>
     class Search_tree;
 
-    template<class LEAF_TYPE>
-    class I_node {
-        friend class Search_tree<LEAF_TYPE>;
-    public:
-        explicit I_node(std::shared_ptr<I_node<LEAF_TYPE>> parent) : parent(parent) {}
-        I_node() = default;
-    private:
-        std::shared_ptr<I_node> parent;
-        //std::shared_ptr<Node<LEAF_TYPE>> left, right;
-        std::vector<std::shared_ptr<I_node>> children;
-    };
-
-
     template<class SEARCH_QUALIFIER>
     class Node;
     template<class LEAF_TYPE>
-    class Leaf : public I_node<LEAF_TYPE> {
+    class Leaf : public Node<LEAF_TYPE> {
     public:
-        Leaf(std::shared_ptr<I_node<LEAF_TYPE>> node,LEAF_TYPE* data) : data(data), I_node<LEAF_TYPE>(node) {}
+        Leaf(std::shared_ptr<Node<LEAF_TYPE>> node,LEAF_TYPE* data) : data(data), Node<LEAF_TYPE>(node) {}
         Leaf() = default;
 
         const LEAF_TYPE* get_data() {
@@ -46,11 +34,16 @@ namespace Lab2 {
     };
 
     template<class LEAF_TYPE>
-    class Node : public I_node<LEAF_TYPE>{
+    class Node {
+        friend class Search_tree<LEAF_TYPE>;
     public:
-        Node(std::shared_ptr<I_node<LEAF_TYPE>> parent) : I_node<LEAF_TYPE>(parent) {}
-        explicit Node() : I_node<LEAF_TYPE>() {};
-
+        explicit Node(std::shared_ptr<Node<LEAF_TYPE>> parent) : parent(parent) {}
+        Node() = default;
+    private:
+        std::shared_ptr<Node> parent;
+        std::vector<std::shared_ptr<Node>> children;
+    private:
+        std::vector<std::unique_ptr<I_comparator<LEAF_TYPE>>> m_comparator;
     };
 
     template<class LEAF_TYPE>
