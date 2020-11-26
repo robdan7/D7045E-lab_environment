@@ -11,7 +11,7 @@ namespace Lab2 {
          * @param c
          * @return True if the line ac is on the right side of ab
          */
-        static bool left(Vertex& a, Vertex& b, Vertex& c);
+        static bool left(const Vertex& a, const Vertex& b, const Vertex& c);
         /**
          *
          * @param a
@@ -19,11 +19,12 @@ namespace Lab2 {
          * @param c
          * @return True if the line ac is one the left side of ab.
          */
-        static bool right(Vertex& a, Vertex& b, Vertex& c);
-        static bool on(Vertex& a, Vertex& b, Vertex& c);
-        Vertex operator+(Vertex& other) const;
-        Vertex operator-(Vertex& other) const;
-        bool operator==(Vertex& other) const;
+        static bool right(const Vertex& a, const Vertex& b, const Vertex& c);
+        static bool on(const Vertex& a, const Vertex& b, const Vertex& c);
+        Vertex operator+(const Vertex& other) const;
+        Vertex operator-(const Vertex& other) const;
+        bool operator==(const Vertex& other) const;
+        bool operator==(const Vertex* other) const;
     //private:
         static double z_cross_product(Vertex& a, Vertex& b);
     };

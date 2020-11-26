@@ -1,6 +1,8 @@
-#include "Algorithms.h"
 #include <algorithm>
+#include <numeric>
+#include "Algorithms.h"
 #include "Search_tree.h"
+#include "Line.h"
 #include "Triangle.h"
 namespace Lab2 {
     void internal_merge(std::vector<Vertex>* list, std::vector<Vertex>* destination, std::vector<Vertex>::iterator left, std::vector<Vertex>::iterator right, std::vector<Vertex>::iterator end) {
@@ -52,7 +54,6 @@ namespace Lab2 {
         std::vector<uint32_t> line_strip;
         for (int i = 0; i < sorted_list.size(); ++i) {
             while (line_strip.size() >= 2 && (Vertex::right(sorted_list[line_strip[line_strip.size()-2]], sorted_list[line_strip.back()], sorted_list[i]) || Vertex::on(sorted_list[line_strip[line_strip.size()-2]], sorted_list[line_strip.back()], sorted_list[i]))) {
-                auto temp = Vertex::right(sorted_list[line_strip[line_strip.size()-2]], sorted_list[line_strip.back()], sorted_list[i]);
                 line_strip.pop_back();
             }
             line_strip.push_back(i);
@@ -70,13 +71,14 @@ namespace Lab2 {
         return std::move(line_strip);
     }
 
-    std::shared_ptr<Search_tree<Triangle>> build_helper(std::vector<uint32_t>& hull,std::vector<Vertex>& vertices, std::vector<Triangle>& triangles, uint32_t start_index, uint32_t end_index) {
+    std::shared_ptr<Search_tree> build_helper(std::vector<uint32_t>& hull,std::vector<Vertex>& vertices, std::vector<std::shared_ptr<Triangle>>& triangles, uint32_t start_index, uint32_t end_index) {
         if (end_index - start_index == 1) {
             /// Base case
-            triangles.emplace_back(vertices[hull[0]], vertices[hull[start_index]],vertices[hull[end_index]]);
-            auto leaf = std::make_shared<Leaf<Triangle>>(nullptr, &triangles.back());
-            triangles.back().set_leaf(leaf);
-            auto tree = std::make_shared<Search_tree<Triangle>>();
+            triangles.push_back(std::make_shared<Triangle>(&vertices[hull[0]], &vertices[hull[start_index]],&vertices[hull[end_index]]));
+
+            auto leaf = std::make_shared<Leaf>(nullptr, triangles.back());
+            triangles.back()->set_leaf(leaf);
+            auto tree = std::make_shared<Search_tree>(std::static_pointer_cast<I_node>(leaf));
             return tree;
         }
 
@@ -86,26 +88,49 @@ namespace Lab2 {
             exit(1);
         }
 
-        auto tree = std::make_shared<Search_tree<Triangle>>();
         auto index = triangles.size();
-        tree->set_left_tree(build_helper(hull,vertices,triangles,start_index, split));
+        auto right = build_helper(hull,vertices,triangles,start_index, split);
         auto lower_size = triangles.size()-index;
-        tree->set_right_tree(build_helper(hull,vertices,triangles,split,end_index));
+        auto left = build_helper(hull,vertices,triangles,split,end_index);
+        //tree->set_right_tree(build_helper(hull,vertices,triangles,split,end_index));
 
-        triangles[lower_size-1].ca = &triangles[lower_size];
-        triangles[lower_size].ab = &triangles[lower_size-1];
+        auto tree = std::make_shared<Search_tree>(left, right, Line{vertices[hull[0]],vertices[hull[split]]});
+
+
+        triangles[lower_size-1]->ca = triangles[lower_size];
+        triangles[lower_size]->ab = triangles[lower_size-1];
 
         return tree;
     }
 
-    std::shared_ptr<Search_tree<Triangle>> build(std::vector<uint32_t>& convex_hull, std::vector<Vertex>& vertices, std::vector<Triangle>& triangle_dest) {
-        return build_helper(convex_hull,vertices,  triangle_dest, 1, convex_hull.size()-1);
+    std::shared_ptr<Search_tree> build(std::vector<uint32_t>& convex_hull, std::vector<Vertex>& vertices, std::vector<std::shared_ptr<Triangle>>& triangle_dest) {
+        return build_helper(convex_hull,vertices,  triangle_dest, 1, convex_hull.size()-2);
     }
 
-    void split(std::shared_ptr<Search_tree<Triangle>>& tree, std::vector<uint32_t>& vertex_indices, std::vector<Vertex>& vertices, std::vector<Triangle>& triangles) {
-        for (const auto& index : vertex_indices) {
+    void split(std::shared_ptr<Search_tree> tree, std::vector<uint32_t>& convex_hull, std::vector<Vertex>& vertices, std::vector<std::shared_ptr<Triangle>>& triangles) {
+        std::vector<uint32_t> inside_vertices(vertices.size());
+        std::iota(inside_vertices.rbegin(), inside_vertices.rend(), 0);  /// Fill with increasing numbers
 
+
+        uint32_t j = convex_hull.size()-2;
+        uint32_t i = 0;
+        while (j >= i) {
+            if (convex_hull[j] < convex_hull[i]) {
+                /// delete upper hull vertex
+                inside_vertices[vertices.size()-1-convex_hull[j]] = inside_vertices.back();
+                inside_vertices.pop_back();
+                j--;
+            } else {
+                inside_vertices[vertices.size()-1-convex_hull[i]] = inside_vertices.back();
+                inside_vertices.pop_back();
+                i++;
+            }
         }
+
+        for (const auto& index : inside_vertices) {
+            tree->insert(&vertices[index],triangles,vertices);
+        }
+
     }
 
 }

@@ -17,14 +17,16 @@ END_SHADER_CONST(Global_uniforms)
 #include <iostream>
 
 void randomize_points(std::vector<Lab2::Vertex>& list, int size) {
+
     std::srand(std::time(nullptr));
-        for (int i = 0 ; i < size; ++i) {
-            auto x = (rand() % (180)-90)/100.0f;
-            auto y = (rand() % (180)-90)/100.0f;
-            list.emplace_back(x,y);
-        }
+    for (int i = 0 ; i < size; ++i) {
+        auto x = (rand() % (200)-100)/100.0f;
+        auto y = (rand() % (200)-100)/100.0f;
+        list.emplace_back(x,y);
+    }
 
 }
+
 
 int main(int argc, char** argv) {
     auto window = std::shared_ptr<Engine::Window>(Engine::Window::create_window());
@@ -39,11 +41,19 @@ int main(int argc, char** argv) {
         colors.push_back(vert.x);
         colors.push_back(vert.y);
     }
-
     auto hull_indices = Lab2::calc_convex_hull(list);
+    std::vector<std::shared_ptr<Lab2::Triangle>> triangles;
+    auto tree = Lab2::build(hull_indices,list,triangles);
 
-    std::vector<Lab2::Triangle> triangles;
-    Lab2::build(hull_indices,list,triangles);
+/*
+    list.emplace_back(0.25f,0.25f);
+
+    list.emplace_back(0.25,0);
+    list.emplace_back(0.4f,0);
+    list.emplace_back(0.3f,0.1f);
+    list.emplace_back(0.5f,0.25f);
+*/
+    Lab2::split(tree,hull_indices,list,triangles);
 
 
     Lab2::Vertex& a= list[0];
@@ -52,15 +62,10 @@ int main(int argc, char** argv) {
     std::vector<uint32_t> triangle_indices;
     float i = 0;
     for (const auto& tri : triangles) {
-        triangle_indices.push_back(std::find(list.begin(),list.end(), tri.a)-list.begin());
-        triangle_indices.push_back(std::find(list.begin(),list.end(), tri.b)-list.begin());
-        triangle_indices.push_back(std::find(list.begin(),list.end(), tri.c)-list.begin());
-/*
-        colors.push_back(0);
-        colors.push_back(0);
-        colors.push_back(0);
-        colors.push_back(0);
-*/
+        triangle_indices.push_back(std::find(list.begin(),list.end(), tri->a)-list.begin());
+        triangle_indices.push_back(std::find(list.begin(),list.end(), tri->b)-list.begin());
+        triangle_indices.push_back(std::find(list.begin(),list.end(), tri->c)-list.begin());
+
     }
 
     /// -------- Shaders --------
@@ -168,25 +173,13 @@ int main(int argc, char** argv) {
 
         shader_program->bind();
         line_vertex_array->bind();
-        /*
-        uniforms.color.m_data = yellow;
-        uniforms.update_color();
-        glDrawElements(GL_TRIANGLE_FAN, index_buffer->get_count()/sizeof(uint32_t), GL_UNSIGNED_INT, nullptr);
-        */
 
+/*
         uniforms.color.m_data = red;
         uniforms.update_color();
         glDrawArrays(GL_POINTS, 0, list.size());
-
-/*
-        uniforms.color.m_data = black;
-        uniforms.update_color();
-        //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-        glDrawElements(GL_LINE_STRIP, index_buffer->get_count()/sizeof(uint32_t), GL_UNSIGNED_INT, nullptr);
-        //glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-        //glDrawElements(GL_POINTS, index_buffer->get_count()/sizeof(uint32_t), GL_UNSIGNED_INT, nullptr);
-        line_vertex_array->unbind();
 */
+
 
         triangle_fan->bind();
         uniforms.color.m_data = black;
@@ -207,4 +200,5 @@ int main(int argc, char** argv) {
         window->on_update();
     }
     return 0;
+
 }

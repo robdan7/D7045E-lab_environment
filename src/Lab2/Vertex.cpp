@@ -6,19 +6,19 @@ namespace Lab2 {
 
     }
 
-    bool Vertex::left(Vertex &a, Vertex &b, Vertex &c) {
+    bool Vertex::left(const Vertex &a, const Vertex &b, const Vertex &c) {
         Vertex first = b-a;
         Vertex second = c-a;
         return Vertex::z_cross_product(first,second) > 0;
     }
 
-    bool Vertex::right(Vertex &a, Vertex &b, Vertex &c) {
+    bool Vertex::right(const Vertex &a, const Vertex &b, const Vertex &c) {
         Vertex first = b-a;
         Vertex second = c-a;
         return Vertex::z_cross_product(first,second) < 0;
     }
 
-    bool Vertex::on(Vertex &a, Vertex &b, Vertex &c) {
+    bool Vertex::on(const Vertex &a, const Vertex &b, const Vertex &c) {
         Vertex first = b-a;
         Vertex second = c-a;
         return Vertex::z_cross_product(first,second) == 0;
@@ -30,15 +30,19 @@ namespace Lab2 {
         return a.x*b.y-a.y*b.x;
     }
 
-    Vertex Vertex::operator+(Vertex &other) const {
+    Vertex Vertex::operator+(const Vertex &other) const {
         return Vertex(this->x+other.x, this->y+other.y);
     }
 
-    Vertex Vertex::operator-(Vertex &other) const {
+    Vertex Vertex::operator-(const Vertex &other) const {
         return Vertex(this->x-other.x,this->y-other.y);
     }
 
-    bool Vertex::operator==(Vertex &other) const {
+    bool Vertex::operator==(const Vertex &other) const {
         return this->x == other.x && this->y == other.y;
+    }
+
+    bool Vertex::operator==(const Vertex *other) const {
+        return this->x == other->x && this->y == other->y;
     }
 }
