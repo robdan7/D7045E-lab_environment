@@ -90,7 +90,7 @@ namespace Lab2 {
 
         auto index = triangles.size();
         auto right = build_helper(hull,vertices,triangles,start_index, split);
-        auto lower_size = triangles.size()-index;
+        auto lower_size = triangles.size();
         auto left = build_helper(hull,vertices,triangles,split,end_index);
         //tree->set_right_tree(build_helper(hull,vertices,triangles,split,end_index));
 
@@ -130,7 +130,39 @@ namespace Lab2 {
         for (const auto& index : inside_vertices) {
             tree->insert(&vertices[index],triangles,vertices);
         }
+    }
 
+    void shift_color(Color*& A, Color*& B, Color*& C, Color*& D) {
+        Color* A_temp = A;
+        A=D;
+        D=C;
+        C=B;
+        B=A_temp;
+    }
+
+    bool color(std::shared_ptr<Triangle> node, std::vector<bool>& visited, std::vector<Color> &color_dest, Color* A, Color* B, Color* C, Color* self) {
+        if (!node->a && !node->b && !node->c) {
+            return true;
+        } else if (visited[node->triangle_ID]) {
+            if (color_dest[node->triangle_ID] == A) {
+                return false;
+            }
+            return true;
+        }
+        visited[node->triangle_ID] = !visited[node->triangle_ID];
+        if (!color(node->ab,visited, color_dest,self,C,B,A)) {
+            shift_color(A,B,C,self);
+        }
+        if (!color(node->bc,visited,color_dest,self,C,A,B)) {
+            shift_color(A,B,C,self);
+        }
+        if (!color(node->ca,visited,color_dest,self,A,B,C)) {
+            shift_color(A,B,C,self);
+        }
+
+        color_dest[node->triangle_ID] = *self;
+
+        return true;
     }
 
 }

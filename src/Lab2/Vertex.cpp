@@ -1,4 +1,5 @@
 #include "Vertex.h"
+#include <cmath>
 
 namespace Lab2 {
 
@@ -44,5 +45,9 @@ namespace Lab2 {
 
     bool Vertex::operator==(const Vertex *other) const {
         return this->x == other->x && this->y == other->y;
+    }
+
+    float Vertex::len() {
+        return std::sqrtf(this->x*this->x+this->y*this->y);
     }
 }

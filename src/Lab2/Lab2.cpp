@@ -16,14 +16,29 @@ END_SHADER_CONST(Global_uniforms)
 #include "Algorithms.h"
 #include <iostream>
 
+double pi = 2 * acos(0.0);
+
+
 void randomize_points(std::vector<Lab2::Vertex>& list, int size) {
+    /*
+    list.emplace_back(-0.7f,0.0f);
+    list.emplace_back(-0.6f,-0.4f);
+    list.emplace_back(0.2f,0.6f);
+    list.emplace_back(0.5f,-0.15f);
+    list.emplace_back(0.6f,0.05f);
+    list.emplace_back(0.7f,-0.76f);
+    */
+
+
 
     std::srand(std::time(nullptr));
     for (int i = 0 ; i < size; ++i) {
-        auto x = (rand() % (200)-100)/100.0f;
-        auto y = (rand() % (200)-100)/100.0f;
+        auto x = (rand() % (2000)-1000)/1000.0f;
+        auto y = (rand() % (2000)-1000)/1000.0f;
         list.emplace_back(x,y);
     }
+
+
 
 }
 
@@ -32,8 +47,23 @@ int main(int argc, char** argv) {
     auto window = std::shared_ptr<Engine::Window>(Engine::Window::create_window());
     Global_uniforms uniforms;
 
+
+
     std::vector<Lab2::Vertex> list;
-    randomize_points(list,10);
+    randomize_points(list,20);
+
+    float k =3;
+    Lab2::Vertex mid_point;
+
+    {
+        float total_x = 0, total_y = 0;
+        for (const auto& v : list) {
+            total_x += v.x;
+            total_y += v.y;
+        }
+        mid_point.x = total_x/list.size();
+        mid_point.y = total_y/list.size();
+    }
 
     Lab2::sort(list);
     std::vector<float> colors;
@@ -44,6 +74,10 @@ int main(int argc, char** argv) {
     auto hull_indices = Lab2::calc_convex_hull(list);
     std::vector<std::shared_ptr<Lab2::Triangle>> triangles;
     auto tree = Lab2::build(hull_indices,list,triangles);
+
+
+
+
 
 /*
     list.emplace_back(0.25f,0.25f);
@@ -56,15 +90,71 @@ int main(int argc, char** argv) {
     Lab2::split(tree,hull_indices,list,triangles);
 
 
+    std::vector<Lab2::Color> triangle_colors(triangles.size());
+    std::vector<bool> visited_triangles(triangles.size());
+    Lab2::Color A{81/255.0f,170/255.0f,227/255.0f};
+    Lab2::Color B{48/255.0f,8/255.0f,70/255.0f};
+    Lab2::Color C{1,227/255.0f,0/255.0f};
+    Lab2::Color D{168/255.0f,94/255.0f,27/255.0f};
+    Lab2::color(triangles[0],visited_triangles,triangle_colors,&A,&B,&C,&D);
+
     Lab2::Vertex& a= list[0];
     //std::find(list.begin(),list.end(), a);
 
     std::vector<uint32_t> triangle_indices;
+
+
+    std::vector<float> triangle_array;
+
+
     float i = 0;
     for (const auto& tri : triangles) {
+        auto len1 = (*tri->a-mid_point).len();
+        auto len2 = (*tri->b-mid_point).len();
+        auto len3 = (*tri->c-mid_point).len();
+        float d = len3;
+        if (len1 > len2 && len1 > len3) {
+            d = len1;
+        } else if (len2 > len1 && len2 > len3) {
+            d = len2;
+        }
+
+        triangle_array.push_back(tri->a->x);
+        triangle_array.push_back(tri->a->y);
+
+        triangle_array.push_back(triangle_colors[tri->triangle_ID].r);
+        triangle_array.push_back(triangle_colors[tri->triangle_ID].g);
+        triangle_array.push_back(triangle_colors[tri->triangle_ID].b);
+        /*
+        triangle_array.push_back((float)(std::sin(k*pi*(d-tri->a->x)/d)+1)/2.0f);
+        triangle_array.push_back((std::sin(k*pi*(d-tri->a->x)/d+2*pi/3)+1)/2.0f);
+        triangle_array.push_back((std::sin(k*pi*(d-tri->a->x)/d+4*pi/3)+1)/2.0f);
+        */
+        triangle_array.push_back(tri->b->x);
+        triangle_array.push_back(tri->b->y);
+        triangle_array.push_back(triangle_colors[tri->triangle_ID].r);
+        triangle_array.push_back(triangle_colors[tri->triangle_ID].g);
+        triangle_array.push_back(triangle_colors[tri->triangle_ID].b);
+        /*
+        triangle_array.push_back((std::sin(k*pi*(d-tri->b->x)/d)+1)/2.0f);
+        triangle_array.push_back((std::sin(k*pi*(d-tri->b->x)/d+2*pi/3)+1)/2.0f);
+        triangle_array.push_back((std::sin(k*pi*(d-tri->b->x)/d+4*pi/3)+1)/2.0f);
+        */
+        triangle_array.push_back(tri->c->x);
+        triangle_array.push_back(tri->c->y);
+        triangle_array.push_back(triangle_colors[tri->triangle_ID].r);
+        triangle_array.push_back(triangle_colors[tri->triangle_ID].g);
+        triangle_array.push_back(triangle_colors[tri->triangle_ID].b);
+        /*
+        triangle_array.push_back((std::sin(k*pi*(d-tri->c->x)/d)+1)/2.0f);
+        triangle_array.push_back((std::sin(k*pi*(d-tri->c->x)/d+2*pi/3)+1)/2.0f);
+        triangle_array.push_back((std::sin(k*pi*(d-tri->c->x)/d+4*pi/3)+1)/2.0f);
+        */
+
         triangle_indices.push_back(std::find(list.begin(),list.end(), tri->a)-list.begin());
         triangle_indices.push_back(std::find(list.begin(),list.end(), tri->b)-list.begin());
         triangle_indices.push_back(std::find(list.begin(),list.end(), tri->c)-list.begin());
+        i++;
 
     }
 
@@ -74,6 +164,8 @@ int main(int argc, char** argv) {
             R"(
             #version 450 core
             in vec4 position;
+            in vec3 color;
+            out vec3 vs_color;
 
             uniform Uniform_block {
                 mat4 view_matrix;
@@ -82,6 +174,7 @@ int main(int argc, char** argv) {
             } my_block;
 
             void main() {
+                vs_color = color;
                 gl_Position = position;
             }
 
@@ -90,6 +183,7 @@ int main(int argc, char** argv) {
             GL_FRAGMENT_SHADER,
             R"(
             #version 450 core
+            in vec3 vs_color;
             out vec4 color;
             uniform Uniform_block {
                 mat4 view_matrix;
@@ -97,7 +191,7 @@ int main(int argc, char** argv) {
                 vec4 color;
             } my_block;
             void main() {
-                color = my_block.color;
+                color = vec4(vs_color,1);
             }
             )");
 
@@ -113,6 +207,12 @@ int main(int argc, char** argv) {
     auto vertex_buffer = Engine::Vertex_buffer::Create(&list[0], list.size()*2*sizeof(float),
                                                        Engine::Raw_buffer::Access_frequency::STATIC,
                                                        Engine::Raw_buffer::Access_type::DRAW);
+
+    auto triangle_buffer= Engine::Vertex_buffer::Create(&triangle_array[0],triangle_array.size()*sizeof(triangle_array[0]),
+                                                        Engine::Raw_buffer::Access_frequency::DYNAMIC,
+                                                        Engine::Raw_buffer::Access_type::DRAW);
+    Engine::Buffer_layout triangulation_layout = {{Engine::Shader_data::Float2, "position"}, {Engine::Shader_data::Float3, "color"}};
+    triangle_buffer->set_layout(triangulation_layout);
 
     //auto color_buffer = Engine::Vertex_buffer::Create(&colors[0], colors.size()*sizeof(float), Engine::Raw_buffer::Access_frequency::STATIC,Engine::Raw_buffer::Access_type::DRAW);
     //Engine::Buffer_layout color_layout = {{Engine::Shader_data::Float2, "test"}};
@@ -135,6 +235,9 @@ int main(int argc, char** argv) {
     line_vertex_array->add_vertex_buffer(vertex_buffer);
     line_vertex_array->set_index_buffer(index_buffer);
 
+    auto trianglulation_VAO = Engine::Vertex_array::Create();
+    trianglulation_VAO->add_vertex_buffer(triangle_buffer);
+
     /// -------- Camera --------
     float aspect_ratio = ((float)window->get_width()/window->get_height());
     auto camera = Engine::Orthographic_camera(-aspect_ratio,aspect_ratio,1,-1,0,1);
@@ -143,6 +246,42 @@ int main(int argc, char** argv) {
     /// Initialize camera uniform matrix.
     uniforms.view_matrix.m_data = camera.get_view_projection_matrix();
     uniforms.update_view_matrix();
+
+
+
+    /// -------- Mouse listener that sets the triangle color --------
+    Lab2::Triangle* clicked_triangle = nullptr;
+    Engine::Event_actor_obj<Engine::Mouse_button_Event> mouse_listener;
+    mouse_listener.set_callback_func<Engine::Mouse_button_Event>([window ,tree,triangle_buffer,&triangle_array,&clicked_triangle](Engine::Mouse_button_Event event){
+        if (event.action) {
+            auto mouse_pos = window->get_cursor_pos();
+            float x = (float)std::get<0>(mouse_pos)/window->get_width()*2.0f-1.0f;
+            float y = -((float)std::get<1>(mouse_pos)/window->get_height()*2.0f-1.0f);
+
+            Lab2::Vertex v{x,y};
+
+
+            if (clicked_triangle) {
+                float base_offset = clicked_triangle->triangle_ID*5*3+2+1;
+                triangle_array[base_offset] = 1-triangle_array[base_offset];
+                triangle_array[base_offset+5] = 1-triangle_array[base_offset+5];
+                triangle_array[base_offset+10] =1 -triangle_array[base_offset+10];
+                triangle_buffer->set_sub_data(&triangle_array[base_offset],base_offset*sizeof(float),12*sizeof(float));
+            }
+            if (clicked_triangle = tree->search(v)) {
+                std::cout << "You clicked on " << std::to_string(clicked_triangle->triangle_ID) << std::endl;
+                float base_offset = clicked_triangle->triangle_ID*5*3+2+1;
+                triangle_array[base_offset] = 1-triangle_array[base_offset];
+                triangle_array[base_offset+5] = 1-triangle_array[base_offset+5];
+                triangle_array[base_offset+10] =1 -triangle_array[base_offset+10];
+                triangle_buffer->set_sub_data(&triangle_array[base_offset],base_offset*sizeof(float),12*sizeof(float));
+            }
+
+        }
+    });
+
+
+
 
     /// Misc GL and engine commands.
     glLineWidth(3); /// TODO move to engine.
@@ -153,8 +292,9 @@ int main(int argc, char** argv) {
     auto black = glm::vec4(0,0,0,1);
     auto red = glm::vec4(1,0,0,1);
     auto yellow = glm::vec4 (0.9,0.7,0.2,1);
-    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     while (!window->should_close()) {
+        mouse_listener.on_update();
 
         /// Circle around window center
         uniforms.transform_matrix.m_data = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0, 1));
@@ -181,10 +321,11 @@ int main(int argc, char** argv) {
 */
 
 
-        triangle_fan->bind();
+        trianglulation_VAO->bind();
         uniforms.color.m_data = black;
         uniforms.update_color();
-        glDrawElements(GL_TRIANGLES, index_buffer->get_count()/sizeof(uint32_t), GL_UNSIGNED_INT, nullptr);
+        //glDrawElements(GL_TRIANGLES, index_buffer->get_count()/sizeof(uint32_t), GL_UNSIGNED_INT, nullptr);
+        glDrawArrays(GL_TRIANGLES, 0, triangle_buffer->get_size()/sizeof(triangle_array[0]));
 
         line_vertex_array->bind();
 
@@ -192,10 +333,9 @@ int main(int argc, char** argv) {
         uniforms.update_color();
         glDrawArrays(GL_POINTS, 0, list.size());
 
-        triangle_fan->unbind();
+        line_vertex_array->unbind();
 
         shader_program->unbind();
-
 
         window->on_update();
     }

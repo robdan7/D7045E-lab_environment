@@ -25,6 +25,8 @@ namespace Engine {
 
         bool should_close() override;
 
+        std::tuple<double, double> get_cursor_pos() override;
+
     private:
 
         virtual void shutdown();

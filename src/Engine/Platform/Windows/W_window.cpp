@@ -1,4 +1,5 @@
 #include "W_window.h"
+#include <Event/Event_system.h>
 
 namespace Engine {
     bool s_running = true;
@@ -56,7 +57,8 @@ namespace Engine {
             //this->post(std::make_shared<Event_message>(2));
             //W_window* this_window = get_GLFW_window(window);
             s_running = false;
-            //Event_system::post<Engine::Window_close_event>();
+            Event_system::post<Engine::Window_close_event>();
+
         });
 
         /// Resize events.
@@ -66,29 +68,29 @@ namespace Engine {
             this_window->m_data->height = height;
             this_window->m_data->width = width;
             this_window->activate_resize();
-            //Event_system::post<Engine::Window_resize_event>(width, height);
+            Event_system::post<Engine::Window_resize_event>(width, height);
         });
 
 
         /// These events should be handled by the app layers.
         glfwSetMouseButtonCallback(this->m_window, [](GLFWwindow* window, int button, int action, int mods){
-            //Event_system::post<Engine::Mouse_button_Event>(button, action);
+            Event_system::post<Engine::Mouse_button_Event>(button, action);
         });
 
         glfwSetKeyCallback(this->m_window, [](GLFWwindow* window, int key, int scancode, int action, int mods){
-            //Event_system::post<Engine::Keyboard_key_Event>(key, action);
+            Event_system::post<Engine::Keyboard_key_Event>(key, action);
         });
 
         glfwSetCharCallback(this->m_window, [](GLFWwindow* window, unsigned int unicode) {
-            //Event_system::post<Keyboard_char_event>(unicode);
+            Event_system::post<Keyboard_char_event>(unicode);
         });
 
         glfwSetCursorPosCallback(this->m_window, [] (GLFWwindow* window, double xpos, double ypos) {
-            //Event_system::post<Engine::Mouse_cursor_Event>(xpos, ypos);
+            Event_system::post<Engine::Mouse_cursor_Event>(xpos, ypos);
         });
 
         glfwSetScrollCallback(this->m_window,  [] (GLFWwindow* window, double xoffset, double yoffset){
-            //Event_system::post<Engine::Mouse_scroll_Event>(xoffset, yoffset);
+            Event_system::post<Engine::Mouse_scroll_Event>(xoffset, yoffset);
         });
 
     }
@@ -140,6 +142,12 @@ namespace Engine {
 
     bool W_window::should_close() {
         return !s_running;
+    }
+
+    std::tuple<double, double> W_window::get_cursor_pos() {
+        double x, y;
+        glfwGetCursorPos(this->m_window, &x, &y);
+        return std::make_tuple(x,y);
     }
 
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <tuple>
 #include <Renderer/GLFW_context.h>
 
 
@@ -38,6 +39,7 @@ namespace Engine {
         virtual void show_cursor() = 0;
         virtual void hide_cursor() = 0;
         virtual void disable_cursor() = 0;
+        virtual std::tuple<double,double> get_cursor_pos() = 0;
         virtual bool should_close() = 0;
     };
 }

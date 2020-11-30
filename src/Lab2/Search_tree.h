@@ -8,6 +8,7 @@ namespace Lab2 {
     class Search_tree;
     class Node;
     class Tri_node;
+
     class I_node {
         friend Search_tree;
         friend Tri_node;
@@ -15,6 +16,7 @@ namespace Lab2 {
     public:
         explicit I_node(std::shared_ptr<I_node> parent) : parent(std::move(parent))  {}
         I_node() : parent(nullptr) {}
+        virtual Triangle* find(const Vertex& v) = 0;
         /**
          * Insert a node into the tree
          * @param v
@@ -38,6 +40,8 @@ namespace Lab2 {
             return this->data;
         }
 
+        Triangle *find(const Vertex &v) override;
+
     private:
         std::shared_ptr<Triangle> data;
         bool test = false;
@@ -47,11 +51,14 @@ namespace Lab2 {
         friend class Search_tree;
         friend Node;
     public:
+        Triangle *find(const Vertex &v) override;
+
         explicit Tri_node(std::shared_ptr<I_node> parent,Vertex* center, Vertex* AB, Vertex* BC, Vertex* CA) : I_node(std::move(parent)),center(center),point_AB(AB),point_BC(BC),point_CA(CA) {}
         Tri_node(Vertex* center, Vertex* AB, Vertex* BC, Vertex* CA) : I_node(),center(center),point_AB(AB),point_BC(BC),point_CA(CA) {}
-
         uint32_t insert(Vertex* v, std::vector<std::shared_ptr<Triangle>>& dest, std::vector<Vertex>& vertices) override;
 
+    private:
+        friend void tri_node_helper(std::shared_ptr<Tri_node> child_pointer, std::shared_ptr<Leaf> original, std::vector<std::shared_ptr<Triangle>> &dest);
     private:
         std::shared_ptr<I_node> child_A,child_B,child_C;
         Vertex* center;
@@ -65,14 +72,16 @@ namespace Lab2 {
         friend Tri_node;
         //friend Node;
     public:
+        Triangle *find(const Vertex &v) override;
+
         explicit Node(std::shared_ptr<I_node> parent, Line cut) : I_node(std::move(parent)), cut(cut) {}
         Node( Line cut) : I_node(), cut(cut) {}
 
         uint32_t insert(Vertex* v, std::vector<std::shared_ptr<Triangle>>& dest, std::vector<Vertex>& vertices) override;
 
     private:
-
-        void node_insert_helper(std::shared_ptr<Node> child_pointer, std::shared_ptr<Leaf> original,std::vector<std::shared_ptr<Triangle>> &dest);
+        friend void node_helper(std::shared_ptr<Node> child_pointer, std::shared_ptr<Leaf> original, std::vector<std::shared_ptr<Triangle>> &dest);
+    private:
         std::shared_ptr<I_node> child_left,child_right;
         Line cut;
     };
@@ -120,6 +129,10 @@ namespace Lab2 {
                 root_pointer->child_C = std::make_shared<Leaf>(root_pointer, dest.back());
             }
             //this->root->insert(node);
+        }
+
+        Triangle* search(Vertex& v) {
+            return this->root->find(v);
         }
 
 

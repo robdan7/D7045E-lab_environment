@@ -10,4 +10,16 @@ namespace Lab2 {
     std::shared_ptr<Search_tree> build(std::vector<uint32_t>& convex_hull, std::vector<Vertex>& vertices, std::vector<std::shared_ptr<Triangle>>& triangle_dest);
 
     void split(std::shared_ptr<Search_tree> tree, std::vector<uint32_t>& convex_hull, std::vector<Vertex>& vertices, std::vector<std::shared_ptr<Triangle>>& triangles);
+
+    struct Color {
+        float r,g,b;
+        bool operator ==(const Color* other) {
+            return this->r == other->r && this->g == other->g && this->b == other->b;
+        }
+        bool operator == (const Color& other) {
+            return this->r == other.r && this->g == other.g && this->b == other.b;
+        }
+    };
+
+    bool color(std::shared_ptr<Triangle> node, std::vector<bool>& visited, std::vector<Color>& color_dest, Color* A, Color* B, Color* C, Color* self);
 }

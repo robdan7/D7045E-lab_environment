@@ -12,5 +12,8 @@
 #include "Renderer/Camera.h"
 #include "Renderer/Shader_constants.h"
 
+#include "Event/Event_actor_st.h"
+#include "Event/Event_system.h"
+
 #include "ImGui/ImGui_layer.h"
 #include "ImGui/ImGui_panel.h"
