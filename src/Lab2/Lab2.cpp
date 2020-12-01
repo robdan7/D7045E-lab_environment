@@ -20,14 +20,14 @@ double pi = 2 * acos(0.0);
 
 
 void randomize_points(std::vector<Lab2::Vertex>& list, int size) {
-    /*
+/*
     list.emplace_back(-0.7f,0.0f);
     list.emplace_back(-0.6f,-0.4f);
     list.emplace_back(0.2f,0.6f);
     list.emplace_back(0.5f,-0.15f);
     list.emplace_back(0.6f,0.05f);
     list.emplace_back(0.7f,-0.76f);
-    */
+*/
 
 
 
@@ -95,7 +95,14 @@ int main(int argc, char** argv) {
     Lab2::Color A{81/255.0f,170/255.0f,227/255.0f};
     Lab2::Color B{48/255.0f,8/255.0f,70/255.0f};
     Lab2::Color C{1,227/255.0f,0/255.0f};
-    Lab2::Color D{168/255.0f,94/255.0f,27/255.0f};
+    Lab2::Color D{168/255.0f,30/255.0f,27/255.0f};
+
+    /*
+    Lab2::Color A{1,0,0};
+    Lab2::Color B{0,1,0};
+    Lab2::Color C{0,0,1};
+    Lab2::Color D{1,1,1};
+     */
     Lab2::color(triangles[0],visited_triangles,triangle_colors,&A,&B,&C,&D);
 
     Lab2::Vertex& a= list[0];
@@ -250,9 +257,10 @@ int main(int argc, char** argv) {
 
 
     /// -------- Mouse listener that sets the triangle color --------
-    Lab2::Triangle* clicked_triangle = nullptr;
+    std::vector<std::shared_ptr<Lab2::Triangle>> clicked_triangles;
+    std::shared_ptr<Lab2::Triangle> clicked_triangle = nullptr;
     Engine::Event_actor_obj<Engine::Mouse_button_Event> mouse_listener;
-    mouse_listener.set_callback_func<Engine::Mouse_button_Event>([window ,tree,triangle_buffer,&triangle_array,&clicked_triangle](Engine::Mouse_button_Event event){
+    mouse_listener.set_callback_func<Engine::Mouse_button_Event>([window ,tree,triangle_buffer,&triangle_array,&clicked_triangle,&clicked_triangles](Engine::Mouse_button_Event event){
         if (event.action) {
             auto mouse_pos = window->get_cursor_pos();
             float x = (float)std::get<0>(mouse_pos)/window->get_width()*2.0f-1.0f;
@@ -262,19 +270,45 @@ int main(int argc, char** argv) {
 
 
             if (clicked_triangle) {
-                float base_offset = clicked_triangle->triangle_ID*5*3+2+1;
-                triangle_array[base_offset] = 1-triangle_array[base_offset];
-                triangle_array[base_offset+5] = 1-triangle_array[base_offset+5];
-                triangle_array[base_offset+10] =1 -triangle_array[base_offset+10];
-                triangle_buffer->set_sub_data(&triangle_array[base_offset],base_offset*sizeof(float),12*sizeof(float));
+                for (const auto& tri : clicked_triangles) {
+                    float base_offset = tri->triangle_ID*5*3+2;
+                    triangle_array[base_offset] = triangle_array[base_offset]-0.4f;
+                    triangle_array[base_offset+1] = triangle_array[base_offset+1]-0.4f;
+                    triangle_array[base_offset+2] = triangle_array[base_offset+2]-0.4f;
+
+                    triangle_array[base_offset+5] = triangle_array[base_offset+5]-0.4f;
+                    triangle_array[base_offset+6] = triangle_array[base_offset+6]-0.4f;
+                    triangle_array[base_offset+7] = triangle_array[base_offset+7]-0.4f;
+
+                    triangle_array[base_offset+10] = triangle_array[base_offset+10]-0.4f;
+                    triangle_array[base_offset+11] = triangle_array[base_offset+11]-0.4f;
+                    triangle_array[base_offset+12] = triangle_array[base_offset+12]-0.4f;
+
+                    triangle_buffer->set_sub_data(&triangle_array[base_offset],base_offset*sizeof(float),13*sizeof(float));
+                }
+
             }
-            if (clicked_triangle = tree->search(v)) {
+            clicked_triangles.clear();
+            if (clicked_triangle = tree->search(v)) {   /// This is not a typo. Don't put == here
+
+                Lab2::color_circle(std::shared_ptr<Lab2::Triangle>(clicked_triangle),clicked_triangles);
+
                 std::cout << "You clicked on " << std::to_string(clicked_triangle->triangle_ID) << std::endl;
-                float base_offset = clicked_triangle->triangle_ID*5*3+2+1;
-                triangle_array[base_offset] = 1-triangle_array[base_offset];
-                triangle_array[base_offset+5] = 1-triangle_array[base_offset+5];
-                triangle_array[base_offset+10] =1 -triangle_array[base_offset+10];
-                triangle_buffer->set_sub_data(&triangle_array[base_offset],base_offset*sizeof(float),12*sizeof(float));
+                for (const auto& tri : clicked_triangles) {
+                    float base_offset = tri->triangle_ID*5*3+2;
+                    triangle_array[base_offset] = triangle_array[base_offset]+0.4f;
+                    triangle_array[base_offset+1] = triangle_array[base_offset+1]+0.4f;
+                    triangle_array[base_offset+2] = triangle_array[base_offset+2]+0.4f;
+
+                    triangle_array[base_offset+5] = triangle_array[base_offset+5]+0.4f;
+                    triangle_array[base_offset+6] = triangle_array[base_offset+6]+0.4f;
+                    triangle_array[base_offset+7] = triangle_array[base_offset+7]+0.4f;
+
+                    triangle_array[base_offset+10] = triangle_array[base_offset+10]+0.4f;
+                    triangle_array[base_offset+11] = triangle_array[base_offset+11]+0.4f;
+                    triangle_array[base_offset+12] = triangle_array[base_offset+12]+0.4f;
+                    triangle_buffer->set_sub_data(&triangle_array[base_offset],base_offset*sizeof(float),13*sizeof(float));
+                }
             }
 
         }

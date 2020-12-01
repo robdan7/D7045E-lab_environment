@@ -16,7 +16,7 @@ namespace Lab2 {
     public:
         explicit I_node(std::shared_ptr<I_node> parent) : parent(std::move(parent))  {}
         I_node() : parent(nullptr) {}
-        virtual Triangle* find(const Vertex& v) = 0;
+        virtual std::shared_ptr<Triangle>  find(const Vertex& v) = 0;
         /**
          * Insert a node into the tree
          * @param v
@@ -40,7 +40,7 @@ namespace Lab2 {
             return this->data;
         }
 
-        Triangle *find(const Vertex &v) override;
+        std::shared_ptr<Triangle> find(const Vertex &v) override;
 
     private:
         std::shared_ptr<Triangle> data;
@@ -51,7 +51,7 @@ namespace Lab2 {
         friend class Search_tree;
         friend Node;
     public:
-        Triangle *find(const Vertex &v) override;
+        std::shared_ptr<Triangle> find(const Vertex &v) override;
 
         explicit Tri_node(std::shared_ptr<I_node> parent,Vertex* center, Vertex* AB, Vertex* BC, Vertex* CA) : I_node(std::move(parent)),center(center),point_AB(AB),point_BC(BC),point_CA(CA) {}
         Tri_node(Vertex* center, Vertex* AB, Vertex* BC, Vertex* CA) : I_node(),center(center),point_AB(AB),point_BC(BC),point_CA(CA) {}
@@ -72,7 +72,7 @@ namespace Lab2 {
         friend Tri_node;
         //friend Node;
     public:
-        Triangle *find(const Vertex &v) override;
+        std::shared_ptr<Triangle> find(const Vertex &v) override;
 
         explicit Node(std::shared_ptr<I_node> parent, Line cut) : I_node(std::move(parent)), cut(cut) {}
         Node( Line cut) : I_node(), cut(cut) {}
@@ -131,7 +131,7 @@ namespace Lab2 {
             //this->root->insert(node);
         }
 
-        Triangle* search(Vertex& v) {
+        std::shared_ptr<Triangle> search(Vertex& v) {
             return this->root->find(v);
         }
 

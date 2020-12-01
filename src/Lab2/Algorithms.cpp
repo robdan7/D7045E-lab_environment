@@ -78,6 +78,11 @@ namespace Lab2 {
 
             auto leaf = std::make_shared<Leaf>(nullptr, triangles.back());
             triangles.back()->set_leaf(leaf);
+
+            /// Bind all fake triangle neighbours to the real triangle.
+            triangles.back()->ab->ab = triangles.back();
+            triangles.back()->bc->ab = triangles.back();
+            triangles.back()->ca->ab = triangles.back();
             auto tree = std::make_shared<Search_tree>(std::static_pointer_cast<I_node>(leaf));
             return tree;
         }
@@ -100,11 +105,27 @@ namespace Lab2 {
         triangles[lower_size-1]->ca = triangles[lower_size];
         triangles[lower_size]->ab = triangles[lower_size-1];
 
+        /// These lines bind together the newly created fake triangles.
+        triangles[lower_size-1]->bc->ca = triangles[lower_size]->bc;
+        triangles[lower_size]->bc->bc = triangles[lower_size-1]->bc;
+
         return tree;
     }
 
     std::shared_ptr<Search_tree> build(std::vector<uint32_t>& convex_hull, std::vector<Vertex>& vertices, std::vector<std::shared_ptr<Triangle>>& triangle_dest) {
-        return build_helper(convex_hull,vertices,  triangle_dest, 1, convex_hull.size()-2);
+        auto result =  build_helper(convex_hull,vertices,  triangle_dest, 1, convex_hull.size()-2);
+
+        /// The first and last added triangles have unconnected fake triangle neighbours.
+        /// This will enclose the loop of fake triangles around the triangle fan.
+        triangle_dest[0]->ab->ca = triangle_dest[0]->bc;
+        triangle_dest[0]->bc->bc = triangle_dest[0]->ab;
+
+        triangle_dest.back()->ca->bc = triangle_dest.back()->bc;
+        triangle_dest.back()->bc->ca = triangle_dest.back()->ca;
+
+        triangle_dest[0]->ab->bc = triangle_dest.back()->ca;
+        triangle_dest.back()->ca->ca = triangle_dest[0]->ab;
+        return result;
     }
 
     void split(std::shared_ptr<Search_tree> tree, std::vector<uint32_t>& convex_hull, std::vector<Vertex>& vertices, std::vector<std::shared_ptr<Triangle>>& triangles) {
@@ -163,6 +184,44 @@ namespace Lab2 {
         color_dest[node->triangle_ID] = *self;
 
         return true;
+    }
+
+    void color_circle(std::shared_ptr<Triangle> node, std::vector<std::shared_ptr<Triangle>>& dest) {
+        dest.push_back(node);
+        auto current_node = node->ab;
+        Vertex* current_point = node->b;
+        do {
+            if (current_node->a && current_node->b && current_node->c) {
+                dest.push_back(current_node);
+            }
+
+            if (current_node->a == current_point) {
+                /// next side is ca or bc
+                if (current_node->ca == node) {
+                    current_point = current_node->c;
+                    current_node = current_node->bc;
+                } else {
+                    current_node = current_node->ca;
+                }
+            } else if (current_node->b == current_point) {
+                /// next side is ab or ca
+                if (current_node->ab == node) {
+                    current_point = current_node->a;
+                    current_node = current_node->ca;
+                } else {
+                    current_node = current_node->ab;
+                }
+            } else {
+                /// next side is bc or ab
+                if (current_node->bc == node) {
+                    current_point = current_node->b;
+                    current_node = current_node->ab;
+                } else {
+                    current_node = current_node->bc;
+                }
+            }
+        } while (current_node != node->ab);
+
     }
 
 }

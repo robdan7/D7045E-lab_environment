@@ -32,8 +32,8 @@ namespace Lab2 {
         std::shared_ptr<Leaf> leaf;
         const uint32_t triangle_ID;
     protected:
-        //Triangle(Vertex* a, Vertex* b) : a(a), b(b), c(nullptr), ab(nullptr), bc(nullptr), ca(nullptr) {}
-        Triangle();
+        Triangle(Vertex* a, Vertex* b) : a(a), b(b), c(nullptr), ab(nullptr), bc(nullptr), ca(nullptr), triangle_ID(0) {}
+        //Triangle();
     };
 
 }

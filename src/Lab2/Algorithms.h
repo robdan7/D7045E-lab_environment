@@ -22,4 +22,6 @@ namespace Lab2 {
     };
 
     bool color(std::shared_ptr<Triangle> node, std::vector<bool>& visited, std::vector<Color>& color_dest, Color* A, Color* B, Color* C, Color* self);
+
+    void color_circle(std::shared_ptr<Triangle> node, std::vector<std::shared_ptr<Triangle>>& dest);
 }

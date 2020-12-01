@@ -75,8 +75,8 @@ namespace Lab2 {
         return 0;
     }
 
-    Triangle *Node::find(const Vertex &v) {
-        Triangle* result = nullptr;
+    std::shared_ptr<Triangle> Node::find(const Vertex &v) {
+        std::shared_ptr<Triangle>  result = nullptr;
         if ((result = this->child_left->find(v)) != nullptr) {
             return result;
         }
@@ -172,8 +172,8 @@ namespace Lab2 {
         return 0;
     }
 
-    Triangle *Tri_node::find(const Vertex &v) {
-        Triangle* result = nullptr;
+    std::shared_ptr<Triangle> Tri_node::find(const Vertex &v) {
+        std::shared_ptr<Triangle>  result = nullptr;
         if ((result = this->child_A->find(v)) != nullptr) {
             return result;
         } else if ((result = this->child_B->find(v)) != nullptr) {
@@ -301,9 +301,9 @@ namespace Lab2 {
         return 2;
     }
 
-    Triangle *Leaf::find(const Vertex &v) {
+    std::shared_ptr<Triangle> Leaf::find(const Vertex &v) {
         if (Vertex::left(*this->data->a, *this->data->b,v) && Vertex::left(*this->data->b, *this->data->c, v) && Vertex::left(*this->data->c, *this->data->a, v)) {
-            return &(*this->data);
+            return this->data;
         }
         return nullptr;
     }
