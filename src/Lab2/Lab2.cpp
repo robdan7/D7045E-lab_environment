@@ -5,6 +5,9 @@
 #include "Triangle.h"
 #include "Search_tree.h"
 #define PI (atan(1)*4)
+BEGIN_SHADER_CONST(Global_uniforms)
+    SET_SHADER_CONST(Engine::Float4_data, color);
+END_SHADER_CONST(Global_uniforms)
 
 #include "Vertex.h"
 #include "Algorithms.h"
@@ -145,7 +148,8 @@ void create_triangle_array(std::vector<std::shared_ptr<Lab2::Triangle>>& triangl
  */
 void reset_triangles_generic(Singleton_state& state,
                         std::shared_ptr<Engine::Vertex_buffer> vertex_buffer,
-                        std::shared_ptr<Engine::Vertex_buffer> triangle_buffer) {
+                        std::shared_ptr<Engine::Vertex_buffer> triangle_buffer,
+                             std::shared_ptr<Engine::Index_buffer> convex_hull_buffer) {
     Lab2::sort(state.vertex_array);
     //hull_indices.clear();
     Lab2::calc_convex_hull(state.vertex_array,state.hull_indices);
@@ -159,6 +163,7 @@ void reset_triangles_generic(Singleton_state& state,
     create_triangle_array(state.triangles, state.triangle_array, state.triangle_colors);
     vertex_buffer->reset_buffer((float*)&state.vertex_array[0],state.vertex_array.size() * 2 * sizeof(float));
     triangle_buffer->reset_buffer((float*)&state.triangle_array[0],state.triangle_array.size() * sizeof(state.triangle_array[0]));
+    convex_hull_buffer->reset_buffer((uint32_t*)&state.hull_indices[0], state.hull_indices.size()*sizeof(state.hull_indices[0]));
 }
 
 /**
@@ -171,10 +176,11 @@ void reset_triangles_generic(Singleton_state& state,
 void reset_random_triangles(uint32_t size,
                             Singleton_state& state,
                             std::shared_ptr<Engine::Vertex_buffer> vertex_buffer,
-                            std::shared_ptr<Engine::Vertex_buffer> triangle_buffer) {
+                            std::shared_ptr<Engine::Vertex_buffer> triangle_buffer,
+                            std::shared_ptr<Engine::Index_buffer> convex_hull_buffer) {
     state.clear_state();
     randomize_points(state.vertex_array, size);
-    reset_triangles_generic(state,vertex_buffer,triangle_buffer);
+    reset_triangles_generic(state,vertex_buffer,triangle_buffer,convex_hull_buffer);
 }
 
 /**
@@ -185,7 +191,8 @@ void reset_random_triangles(uint32_t size,
  */
 void reset_fixed_triangles(Singleton_state& state,
                            std::shared_ptr<Engine::Vertex_buffer> vertex_buffer,
-                           std::shared_ptr<Engine::Vertex_buffer> triangle_buffer) {
+                           std::shared_ptr<Engine::Vertex_buffer> triangle_buffer,
+                           std::shared_ptr<Engine::Index_buffer> convex_hull_buffer) {
     state.clear_state();
     state.vertex_array.emplace_back(-0.8f,-0.8f);
     state.vertex_array.emplace_back(-0.8f,0.0f);
@@ -213,12 +220,12 @@ void reset_fixed_triangles(Singleton_state& state,
     state.vertex_array.emplace_back(-0.4f,-0.8f);
 
     scramble_points(state.vertex_array);
-    reset_triangles_generic(state,vertex_buffer,triangle_buffer);
+    reset_triangles_generic(state,vertex_buffer,triangle_buffer,convex_hull_buffer);
 }
 
 int main(int argc, char** argv) {
     auto window = std::shared_ptr<Engine::Window>(Engine::Window::create_window());
-
+    Global_uniforms uniforms;
     /// -------- GUI --------
     auto gui = Engine::ImGui_layer(window);
     auto selection_panel = std::make_shared<Selector_panel>();
@@ -261,8 +268,12 @@ int main(int argc, char** argv) {
             R"(
             #version 450 core
             out vec4 color;
+            uniform Uniform_block {
+                vec4 color;
+            } my_block;
+
             void main() {
-                color = vec4(0,0,0,1);
+                color = my_block.color;
             }
             )");
 
@@ -280,25 +291,28 @@ int main(int argc, char** argv) {
 
     /// VBO for all points.
     auto point_buffer = Engine::Vertex_buffer::Create(nullptr, 0,
-                                                      Engine::Raw_buffer::Access_frequency::STATIC,
+                                                      Engine::Raw_buffer::Access_frequency::DYNAMIC,
                                                       Engine::Raw_buffer::Access_type::DRAW);
     /// Set the layout of the vertex buffer. This tells the VAO what the vertex attributes should be.
-    Engine::Buffer_layout layout = {{Engine::Shader_data::Float2, "position"}};
-    point_buffer->set_layout(layout);
+    Engine::Buffer_layout point_layout = {{Engine::Shader_data::Float2, "position"}};
+    point_buffer->set_layout(point_layout);
 
     /// VBO for filled triangles.
     auto triangle_buffer= Engine::Vertex_buffer::Create(nullptr, 0,
                                                         Engine::Raw_buffer::Access_frequency::DYNAMIC,
                                                         Engine::Raw_buffer::Access_type::DRAW);
+
+    auto convex_hull_buffer = Engine::Index_buffer::Create(nullptr,0,Engine::Raw_buffer::Access_frequency::DYNAMIC);
+
     /// Every triangle will also have a color for each vertex.
     Engine::Buffer_layout triangulation_layout = {{Engine::Shader_data::Float2, "position"}, {Engine::Shader_data::Float3, "color"}};
     triangle_buffer->set_layout(triangulation_layout);
 
     /// This creates the actual triangles.
     if (selection_panel->is_random()) {
-        reset_random_triangles(15, singleton, point_buffer, triangle_buffer);
+        reset_random_triangles(15, singleton, point_buffer, triangle_buffer,convex_hull_buffer);
     } else {
-        reset_fixed_triangles(singleton, point_buffer, triangle_buffer);
+        reset_fixed_triangles(singleton, point_buffer, triangle_buffer,convex_hull_buffer);
     }
 
     /// -------- VAOs --------
@@ -307,6 +321,10 @@ int main(int argc, char** argv) {
 
     auto trianglulation_VAO = Engine::Vertex_array::Create();
     trianglulation_VAO->add_vertex_buffer(triangle_buffer);
+
+    auto convex_hull_VAO = Engine::Vertex_array::Create();
+    convex_hull_VAO->set_index_buffer(convex_hull_buffer);
+    convex_hull_VAO->add_vertex_buffer(point_buffer);
 
     /// -------- Mouse listener that sets the triangle color --------
     std::shared_ptr<Lab2::Triangle> clicked_triangle = nullptr;
@@ -372,9 +390,8 @@ int main(int argc, char** argv) {
     glEnable(GL_POINT_SMOOTH);
     Engine::Render::Render_command::set_clear_color({0.6,0.6,0.75,1});
 
-    auto black = glm::vec4(1,1,1,1);
-    auto red = glm::vec4(1,1,0,1);
-    auto yellow = glm::vec4 (0.9,0.7,0.2,1);
+    auto black = glm::vec4(0,0,0,1);
+    auto white = glm::vec4 (1,1,1,1);
     bool triangle_state = selection_panel->is_random();
     while (!window->should_close()) {
         Engine::Render::Render_command::clear();
@@ -386,6 +403,8 @@ int main(int argc, char** argv) {
         glDrawArrays(GL_TRIANGLES, 0, triangle_buffer->get_size()/sizeof(singleton.triangle_array[0]));
 
         dot_shader->bind();
+        uniforms.color.m_data = black;
+        uniforms.update_color();
         /// Render triangle outlines
         glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
         glDrawArrays(GL_TRIANGLES, 0, triangle_buffer->get_size()/sizeof(singleton.triangle_array[0]));
@@ -394,8 +413,11 @@ int main(int argc, char** argv) {
         point_VAO->bind();
         /// Render points
         glDrawArrays(GL_POINTS, 0, singleton.vertex_array.size());
-
-        point_VAO->unbind();
+        convex_hull_VAO->bind();
+        uniforms.color.m_data = white;
+        uniforms.update_color();
+        glDrawElements(GL_POINTS,singleton.hull_indices.size(),GL_UNSIGNED_INT,nullptr);
+        convex_hull_VAO->unbind();
         dot_shader->unbind();
 
         gui.on_update();
@@ -405,9 +427,9 @@ int main(int argc, char** argv) {
             if (temp_state != triangle_state) {
                 triangle_state = temp_state;
                 if(triangle_state) {
-                    reset_random_triangles(15, singleton, point_buffer, triangle_buffer);
+                    reset_random_triangles(15, singleton, point_buffer, triangle_buffer,convex_hull_buffer);
                 } else {
-                    reset_fixed_triangles(singleton, point_buffer, triangle_buffer);
+                    reset_fixed_triangles(singleton, point_buffer, triangle_buffer,convex_hull_buffer);
                 }
             }
         }

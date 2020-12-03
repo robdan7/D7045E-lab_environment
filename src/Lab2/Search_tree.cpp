@@ -87,8 +87,6 @@ namespace Lab2 {
 
 
     uint32_t Tri_node::insert(Vertex *v, std::vector<std::shared_ptr<Triangle>> &dest, std::vector<Vertex> &vertices) {
-
-        /// TODO Check if the point was on a line or not.
         /// For when the point is inside a triangle.
         if (Vertex::left(*this->center, *this->point_AB, *v) && Vertex::right(*this->center, *this->point_BC, *v)) {
             /// Inside child B
@@ -145,7 +143,7 @@ namespace Lab2 {
             return 0;
         }
 
-        /// For when the point is on a line.
+        /// For when the point is on a line between child nodes.
         if (Vertex::on(*this->center, *this->point_AB, *v) || Vertex::on(*this->center, *this->point_CA, *v)) {
             /// On a line in A.
             auto n_triangles_A = this->child_A->insert(v, dest, vertices);
@@ -200,7 +198,7 @@ namespace Lab2 {
     /**
      * Helper function for stitching together fake triangles.
      * @param old_triangle - The old fake triangle
-     * @param new_triangle - The new fake triangle to insert.
+     * @param new_triangle - The new fake triangle to insert on the right side of the other one.
      * @param v
      */
     void stitch_fake_triangles(std::shared_ptr<Triangle> old_triangle, std::shared_ptr<Triangle> new_triangle,Vertex *v) {
