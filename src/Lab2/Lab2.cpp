@@ -344,7 +344,7 @@ int main(int argc, char** argv) {
             if (clicked_triangle = singleton.search_tree->search(v)) {   /// This is not a typo. Don't put == here
                 //std::cout << "You clicked on " << std::to_string(clicked_triangle->triangle_ID) << std::endl;
                 Lab2::color_circle(std::shared_ptr<Lab2::Triangle>(clicked_triangle),singleton.clicked_triangles);
-                //singleton.clicked_triangles.push_back(clicked_triangle);
+                singleton.clicked_triangles.push_back(clicked_triangle);
                 for (const auto& tri : singleton.clicked_triangles) {
                     /// This code is repeated. I know
                     float base_offset = tri->triangle_ID*5*3+2;

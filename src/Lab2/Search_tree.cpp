@@ -84,8 +84,12 @@ namespace Lab2 {
     }
 
 
-    void stitch_fake_triangles(std::shared_ptr<Triangle> new_triangle) {
-
+    void stitch_fake_triangles(std::shared_ptr<Triangle> old_triangle, std::shared_ptr<Triangle> new_triangle,Vertex *v) {
+        old_triangle->b = v;
+        old_triangle->bc->ca = new_triangle;
+        new_triangle->bc = old_triangle->bc;
+        new_triangle->ca = old_triangle;
+        old_triangle->bc = new_triangle;
     }
 
     uint32_t Tri_node::insert(Vertex *v, std::vector<std::shared_ptr<Triangle>> &dest, std::vector<Vertex> &vertices) {
@@ -208,41 +212,38 @@ namespace Lab2 {
         Vertex *c = this->data->c;
 
         /// The following if statements will move the current triangle and append a new one to the list.
-        /// The old triangle will always be on the left side of point a to v
+        /// The old triangle will always be on the left side of line a to v
         if (Vertex::on(*this->data->a, *this->data->b, *v)) {
             /// The new point is between a and b.
             /// New triangle: c a v
             /// Old triangle: c v b
 
             dest.push_back(std::make_shared<Triangle>(c, a, v,dest.size()));
-
             dest.back()->bc->ab = dest.back();
-            if (!this->data->ab->c) {
-                this->data->ab->b = v;
-                this->data->ab->bc->ca = dest.back()->bc;
-                dest.back()->bc->bc = this->data->ab->bc;
-                dest.back()->bc->ca = this->data->ab;
-                this->data->ab->bc = dest.back()->bc;
-            } else {
-                dest.back()->bc = this->data->ab;
-            }
             dest.back()->ab = this->data->ca;
             dest.back()->ca = this->data;
 
-
-
+            /// Reset old triangle vertices so it can be reused.
             this->data->a = c;
             this->data->c = b;
             this->data->b = v;
+
             this->data->ca->update_reference(dest.back(), this->data);
             auto bc = this->data->bc;
-            if (this->data->ab->b == v&& this->data->ab->c) {
-                /// The neighbour node has already been split. We need to stitch the triangles together
-                this->data->ab->bc = dest.back();
-                this->data->bc = dest.at(dest.size()-2);
+            this->data->bc = this->data->ab;
+            if (!this->data->ab->c) {
+                /// The triangle at ab is fake. Update it.
+                stitch_fake_triangles(this->data->ab,dest.back()->bc,v);
             } else {
-                this->data->bc = this->data->ab;
+                /// The triangle(s) at ab are real.
+                dest.back()->bc = this->data->ab;
+                if (this->data->ab->b == v) {
+                    /// The triangle at ab has already been split. We need to stitch the triangles together
+                    this->data->ab->bc = dest.back();
+                    this->data->bc = dest.at(dest.size()-2);
+                }
             }
+
             this->data->ab = dest.back();
             this->data->ca = bc;
             return 1;
@@ -252,28 +253,27 @@ namespace Lab2 {
             /// Old triangle: a v c
 
             dest.push_back(std::make_shared<Triangle>(a, b, v, dest.size()));
-
             dest.back()->bc->ab = dest.back();
-            if (!this->data->bc->c) {
-                this->data->bc->b = v;
-                this->data->bc->bc->ca = dest.back()->bc;
-                dest.back()->bc->bc = this->data->bc->bc;
-                dest.back()->bc->ca = this->data->bc;
-                this->data->bc->bc = dest.back()->bc;
-            } else {
-                dest.back()->bc = this->data->bc;
-            }
             dest.back()->ab = this->data->ab;
             dest.back()->ca = this->data;
 
+            /// Reset old triangle vertices so it can be reused.
             this->data->b = v;
-            this->data->ab->update_reference(dest.back(), this->data);
-            if (this->data->bc->b == v&& this->data->bc->c) {
-                /// The neighbour node has already been split. We need to stitch the triangles together
 
-                this->data->bc->bc = dest.back();
-                this->data->bc = dest.at(dest.size()-2);
+            this->data->ab->update_reference(dest.back(), this->data);
+            if (!this->data->bc->c) {
+                /// The triangle at bc is fake. Update it.
+                stitch_fake_triangles(this->data->bc,dest.back()->bc,v);
+            } else {
+                /// The triangle(s) at ab are real.
+                dest.back()->bc = this->data->bc;
+                if (this->data->bc->b == v) {
+                    /// The triangle has already been split. We need to stitch the triangles together
+                    this->data->bc->bc = dest.back();
+                    this->data->bc = dest.at(dest.size()-2);
+                }
             }
+
             this->data->ab = dest.back();
             return 1;
         } else if (Vertex::on(*this->data->c, *this->data->a, *v)) {
@@ -282,31 +282,30 @@ namespace Lab2 {
             /// Old triangle: b v a
 
             dest.push_back(std::make_shared<Triangle>(b, c, v, dest.size()));
-
             dest.back()->bc->ab = dest.back();
-            if (!this->data->ca->c) {
-                this->data->ca->b = v;
-               this->data->ca->bc->ca = dest.back()->bc;
-                dest.back()->bc->bc = this->data->ca->bc;
-                dest.back()->bc->ca = this->data->ca;
-                this->data->ca->bc = dest.back()->bc;
-            } else {
-                dest.back()->bc = this->data->ca;
-            }
             dest.back()->ab = this->data->bc;
             dest.back()->ca = this->data;
 
+            /// Reset old triangle vertices so it can be reused.
             this->data->a = b;
             this->data->b = v;
             this->data->c = a;
+
             this->data->bc->update_reference(dest.back(), this->data);
-            if (this->data->ca->b == v&& this->data->ca->c) {
-                /// The neighbour node has already been split. We need to stitch the triangles together
-                this->data->ca->bc = dest.back();
-                this->data->bc = dest.at(dest.size()-2);
+            this->data->bc = this->data->ca;
+            if (!this->data->ca->c) {
+                /// The triangle at ca is fake. Update it.
+                stitch_fake_triangles(this->data->ca,dest.back()->bc,v);
             } else {
-                this->data->bc = this->data->ca;
+                /// The triangle(s) at ab are real.
+                dest.back()->bc = this->data->ca;
+                if (this->data->ca->b == v && this->data->ca->c) {
+                    /// The triangle has already been split. We need to stitch the triangles together
+                    this->data->ca->bc = dest.back();
+                    this->data->bc = dest.at(dest.size()-2);
+                }
             }
+
             this->data->ca = this->data->ab;
             this->data->ab = dest.back();
 
