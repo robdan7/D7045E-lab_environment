@@ -80,7 +80,7 @@ namespace Lab2 {
         uint32_t insert(Vertex* v, std::vector<std::shared_ptr<Triangle>>& dest, std::vector<Vertex>& vertices) override;
 
     private:
-        friend void node_helper(std::shared_ptr<Node> child_pointer, std::shared_ptr<Leaf> original, std::vector<std::shared_ptr<Triangle>> &dest);
+        friend void node_helper(std::shared_ptr<Node> child_pointer, std::shared_ptr<Leaf> original, std::shared_ptr<Triangle> data);
     private:
         std::shared_ptr<I_node> child_left,child_right;
         Line cut;

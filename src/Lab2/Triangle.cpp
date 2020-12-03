@@ -1,7 +1,6 @@
 #include "Triangle.h"
 #include "Search_tree.h"
 namespace Lab2 {
-    uint32_t created_IDs = 0;
     struct NULL_TRIANGLE : public Triangle {
         NULL_TRIANGLE(Vertex* a, Vertex* b) : Triangle(a,b){}
 
@@ -15,7 +14,7 @@ namespace Lab2 {
         a(a), b(b), c(nullptr), ab(nullptr), bc(nullptr), ca(nullptr), triangle_ID(0) {}
 */
 
-    Triangle::Triangle(Vertex *a, Vertex *b, Vertex *c): a(a),b(b),c(c), triangle_ID(created_IDs++) {
+    Triangle::Triangle(Vertex *a, Vertex *b, Vertex *c, uint32_t triangle_ID): a(a),b(b),c(c), triangle_ID(triangle_ID) {
         this->ab = std::make_shared<NULL_TRIANGLE>(b,a);
         this->bc = std::make_shared<NULL_TRIANGLE>(c,b);
         this->ca = std::make_shared<NULL_TRIANGLE>(a,c);

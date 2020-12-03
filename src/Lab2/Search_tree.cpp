@@ -8,10 +8,10 @@ namespace Lab2 {
         child_pointer->child_C = std::make_shared<Leaf>(child_pointer, dest.back());
     }
 
-    void node_helper(std::shared_ptr<Node> child_pointer, std::shared_ptr<Leaf> original, std::vector<std::shared_ptr<Triangle>> &dest) {
+    void node_helper(std::shared_ptr<Node> child_pointer, std::shared_ptr<Leaf> original, std::shared_ptr<Triangle> data) {
         child_pointer->child_left = original;
         //child_pointer->child_left->parent = child_pointer;
-        child_pointer->child_right = std::make_shared<Leaf>(child_pointer, dest.back());
+        child_pointer->child_right = std::make_shared<Leaf>(child_pointer, data);
     }
 
 
@@ -30,7 +30,7 @@ namespace Lab2 {
                 auto original = std::static_pointer_cast<Leaf>(this->child_left);
                 this->child_left = std::make_shared<Node>(std::shared_ptr<I_node>(this),Line{*original->get_data()->a, *original->get_data()->b});
                 auto child_pointer = std::static_pointer_cast<Node>(this->child_left);
-                node_helper(child_pointer, original, dest);
+                node_helper(child_pointer, original, dest.back());
             }
 
             return 0;
@@ -47,7 +47,7 @@ namespace Lab2 {
                 this->child_right = std::make_shared<Node>(std::shared_ptr<I_node>(this),
                                                            Line{*original->get_data()->a, *original->get_data()->b});
                 auto child_pointer = std::static_pointer_cast<Node>(this->child_right);
-                node_helper(child_pointer, original, dest);
+                node_helper(child_pointer, original, dest.back());
             }
             return 0;
         } else {
@@ -61,7 +61,7 @@ namespace Lab2 {
                 this->child_left = std::make_shared<Node>(std::shared_ptr<I_node>(this),
                                                           Line{*original->get_data()->a, *original->get_data()->b});
                 auto child_pointer = std::static_pointer_cast<Node>(this->child_left);
-                node_helper(child_pointer, original, dest);
+                node_helper(child_pointer, original, dest.at(dest.size()-2));
             }
 
             if (right_triangles) {
@@ -69,7 +69,7 @@ namespace Lab2 {
                 this->child_right = std::make_shared<Node>(std::shared_ptr<I_node>(this),
                                                            Line{*original->get_data()->a, *original->get_data()->b});
                 auto child_pointer = std::static_pointer_cast<Node>(this->child_right);
-                node_helper(child_pointer, original, dest);
+                node_helper(child_pointer, original, dest.back());
             }
         }
         return 0;
@@ -84,23 +84,83 @@ namespace Lab2 {
     }
 
 
+    void stitch_fake_triangles(std::shared_ptr<Triangle> new_triangle) {
+
+    }
+
     uint32_t Tri_node::insert(Vertex *v, std::vector<std::shared_ptr<Triangle>> &dest, std::vector<Vertex> &vertices) {
+
+        /// TODO Check if the point was on a line or not.
+        /// For when the point is inside a triangle.
+        if (Vertex::left(*this->center, *this->point_AB, *v) && Vertex::right(*this->center, *this->point_BC, *v)) {
+            /// Inside child B
+            auto n_triangles = this->child_B->insert(v, dest, vertices);
+            if (n_triangles == 2) {
+                auto original = std::static_pointer_cast<Leaf>(this->child_B);
+                this->child_B = std::make_shared<Tri_node>(std::shared_ptr<I_node>(this), v, original->get_data()->a,
+                                                           dest.at(dest.size() - 2)->a, dest.back()->a);
+                auto child_pointer = std::static_pointer_cast<Tri_node>(this->child_B);
+                /// The same
+                tri_node_helper(child_pointer,original,dest);
+            } else if (n_triangles == 1) {
+                auto original = std::static_pointer_cast<Leaf>(this->child_B);
+                this->child_B = std::make_shared<Node>(std::shared_ptr<I_node>(this),Line{*this->center, *v});
+                auto child_pointer = std::static_pointer_cast<Node>(this->child_B);
+                node_helper(child_pointer,original,dest.back());
+            }
+            return 0;
+        } else if (Vertex::left(*this->center, *this->point_BC, *v) &&
+                   Vertex::right(*this->center, *this->point_CA, *v)) {
+            /// Inside child C
+            auto n_triangles = this->child_C->insert(v, dest, vertices);
+            if (n_triangles == 2) {
+                auto original = std::static_pointer_cast<Leaf>(this->child_C);
+                this->child_C = std::make_shared<Tri_node>(std::shared_ptr<I_node>(this), v, original->get_data()->a,
+                                                           dest.at(dest.size() - 2)->a, dest.back()->a);
+                auto child_pointer = std::static_pointer_cast<Tri_node>(this->child_C);
+                /// The same
+                tri_node_helper(child_pointer,original,dest);
+            } else if (n_triangles == 1) {
+                auto original = std::static_pointer_cast<Leaf>(this->child_C);
+                this->child_C = std::make_shared<Node>(std::shared_ptr<I_node>(this),Line{*this->center, *v});
+                auto child_pointer = std::static_pointer_cast<Node>(this->child_C);
+                node_helper(child_pointer,original,dest.back());
+            }
+            return 0;
+        } else if (Vertex::left(*this->center, *this->point_CA,*v) &&
+                   Vertex::right(*this->center,*this->point_AB,*v)){
+            /// Inside child A
+            auto n_triangles = this->child_A->insert(v, dest, vertices);
+            if (n_triangles == 2) {
+                auto original = std::static_pointer_cast<Leaf>(this->child_A);
+                this->child_A = std::make_shared<Tri_node>(std::shared_ptr<I_node>(this), v, original->get_data()->a,
+                                                           dest.at(dest.size() - 2)->a, dest.back()->a);
+                auto child_pointer = std::static_pointer_cast<Tri_node>(this->child_A);
+                /// The same
+                tri_node_helper(child_pointer,original,dest);
+            } else if (n_triangles = 1) {
+                auto original = std::static_pointer_cast<Leaf>(this->child_A);
+                this->child_A = std::make_shared<Node>(std::shared_ptr<I_node>(this),Line{*this->center, *v});
+                auto child_pointer = std::static_pointer_cast<Node>(this->child_A);
+                node_helper(child_pointer,original,dest.back());
+            }
+            return 0;
+        }
 
         /// For when the point is on a line.
         if (Vertex::on(*this->center, *this->point_AB, *v) || Vertex::on(*this->center, *this->point_CA, *v)) {
             /// On a line in A.
-            auto n_triangles = this->child_A->insert(v, dest, vertices);
-            if (n_triangles) {
+            auto n_triangles_A = this->child_A->insert(v, dest, vertices);
+            if (n_triangles_A) {
                 auto original = std::static_pointer_cast<Leaf>(this->child_A);
                 this->child_A = std::make_shared<Node>(std::shared_ptr<I_node>(this),
                                                        Line{*original->get_data()->a, *original->get_data()->b});
                 auto child_pointer = std::static_pointer_cast<Node>(this->child_A);
                 /// The same
-                node_helper(child_pointer, original, dest);
+                node_helper(child_pointer, original, dest.back());
             }
-            return 0;
         }
-        if (Vertex::on(*this->center, *this->point_BC, *v) || Vertex::on(*this->center, *this->point_CA, *v)) {
+        if (Vertex::on(*this->center, *this->point_BC, *v) || Vertex::on(*this->center, *this->point_AB, *v)) {
             /// On a line in B
             auto n_triangles = this->child_B->insert(v, dest, vertices);
             if (n_triangles) {
@@ -109,10 +169,9 @@ namespace Lab2 {
                                                        Line{*original->get_data()->a, *original->get_data()->b});
                 auto child_pointer = std::static_pointer_cast<Node>(this->child_B);
                 /// The same
-                node_helper(child_pointer, original, dest);
+                node_helper(child_pointer, original, dest.back());
 
             }
-            return 0;
         }
         if (Vertex::on(*this->center, *this->point_CA, *v) || Vertex::on(*this->center, *this->point_BC, *v)) {
             /// On a line in C
@@ -123,51 +182,9 @@ namespace Lab2 {
                                                        Line{*original->get_data()->a, *original->get_data()->b});
                 auto child_pointer = std::static_pointer_cast<Node>(this->child_C);
                 /// The same
-                node_helper(child_pointer, original, dest);
-            }
-            return 0;
-        }
-
-
-
-        /// TODO Check if the point was on a line or not.
-        /// For when the point is inside a triangle.
-        if (Vertex::left(*this->center, *this->point_AB, *v) && Vertex::right(*this->center, *this->point_BC, *v)) {
-            /// Inside child B
-            auto n_triangles = this->child_B->insert(v, dest, vertices);
-            if (n_triangles) {
-                auto original = std::static_pointer_cast<Leaf>(this->child_B);
-                this->child_B = std::make_shared<Tri_node>(std::shared_ptr<I_node>(this), v, original->get_data()->a,
-                                                           dest.at(dest.size() - 2)->a, dest.back()->a);
-                auto child_pointer = std::static_pointer_cast<Tri_node>(this->child_B);
-                /// The same
-                tri_node_helper(child_pointer,original,dest);
-            }
-        } else if (Vertex::left(*this->center, *this->point_BC, *v) &&
-                   Vertex::right(*this->center, *this->point_CA, *v)) {
-            /// Inside child C
-            auto n_triangles = this->child_C->insert(v, dest, vertices);
-            if (n_triangles) {
-                auto original = std::static_pointer_cast<Leaf>(this->child_C);
-                this->child_C = std::make_shared<Tri_node>(std::shared_ptr<I_node>(this), v, original->get_data()->a,
-                                                           dest.at(dest.size() - 2)->a, dest.back()->a);
-                auto child_pointer = std::static_pointer_cast<Tri_node>(this->child_C);
-                /// The same
-                tri_node_helper(child_pointer,original,dest);
-            }
-        } else {
-            /// Inside child A
-            auto n_triangles = this->child_A->insert(v, dest, vertices);
-            if (n_triangles) {
-                auto original = std::static_pointer_cast<Leaf>(this->child_A);
-                this->child_A = std::make_shared<Tri_node>(std::shared_ptr<I_node>(this), v, original->get_data()->a,
-                                                           dest.at(dest.size() - 2)->a, dest.back()->a);
-                auto child_pointer = std::static_pointer_cast<Tri_node>(this->child_A);
-                /// The same
-                tri_node_helper(child_pointer,original,dest);
+                node_helper(child_pointer, original, dest.back());
             }
         }
-
 
         return 0;
     }
@@ -197,11 +214,19 @@ namespace Lab2 {
             /// New triangle: c a v
             /// Old triangle: c v b
 
+            dest.push_back(std::make_shared<Triangle>(c, a, v,dest.size()));
 
-            //dest.emplace_back( c,a,v);
-            dest.push_back(std::make_shared<Triangle>(c, a, v));
+            dest.back()->bc->ab = dest.back();
+            if (!this->data->ab->c) {
+                this->data->ab->b = v;
+                this->data->ab->bc->ca = dest.back()->bc;
+                dest.back()->bc->bc = this->data->ab->bc;
+                dest.back()->bc->ca = this->data->ab;
+                this->data->ab->bc = dest.back()->bc;
+            } else {
+                dest.back()->bc = this->data->ab;
+            }
             dest.back()->ab = this->data->ca;
-            dest.back()->bc = this->data->ab;
             dest.back()->ca = this->data;
 
 
@@ -209,12 +234,12 @@ namespace Lab2 {
             this->data->a = c;
             this->data->c = b;
             this->data->b = v;
-
+            this->data->ca->update_reference(dest.back(), this->data);
             auto bc = this->data->bc;
-            if (this->data->ab->b == v) {
+            if (this->data->ab->b == v&& this->data->ab->c) {
                 /// The neighbour node has already been split. We need to stitch the triangles together
-                this->data->bc = dest.at(dest.size()-2);
                 this->data->ab->bc = dest.back();
+                this->data->bc = dest.at(dest.size()-2);
             } else {
                 this->data->bc = this->data->ab;
             }
@@ -226,44 +251,59 @@ namespace Lab2 {
             /// New triangle: a b v
             /// Old triangle: a v c
 
-            //dest.emplace_back(a,b,c);
-            dest.push_back(std::make_shared<Triangle>(a, b, v));
+            dest.push_back(std::make_shared<Triangle>(a, b, v, dest.size()));
+
+            dest.back()->bc->ab = dest.back();
+            if (!this->data->bc->c) {
+                this->data->bc->b = v;
+                this->data->bc->bc->ca = dest.back()->bc;
+                dest.back()->bc->bc = this->data->bc->bc;
+                dest.back()->bc->ca = this->data->bc;
+                this->data->bc->bc = dest.back()->bc;
+            } else {
+                dest.back()->bc = this->data->bc;
+            }
             dest.back()->ab = this->data->ab;
-            dest.back()->bc = this->data->bc;
             dest.back()->ca = this->data;
 
-            //this->data-> a = a;
             this->data->b = v;
-            //this->data->c = c;
-            if (this->data->bc->b == v) {
+            this->data->ab->update_reference(dest.back(), this->data);
+            if (this->data->bc->b == v&& this->data->bc->c) {
                 /// The neighbour node has already been split. We need to stitch the triangles together
+
+                this->data->bc->bc = dest.back();
                 this->data->bc = dest.at(dest.size()-2);
-                this->data->ab->bc = dest.back();
             }
             this->data->ab = dest.back();
-            //this->data->bc = this->data->bc;
-            //this->data->ca = this->data->ca;
-
             return 1;
         } else if (Vertex::on(*this->data->c, *this->data->a, *v)) {
             /// The new point is between c and a.
             /// New triangle: b c v
             /// Old triangle: b v a
 
-            //dest.emplace_back(b,c,v);
-            dest.push_back(std::make_shared<Triangle>(b, c, v));
+            dest.push_back(std::make_shared<Triangle>(b, c, v, dest.size()));
+
+            dest.back()->bc->ab = dest.back();
+            if (!this->data->ca->c) {
+                this->data->ca->b = v;
+               this->data->ca->bc->ca = dest.back()->bc;
+                dest.back()->bc->bc = this->data->ca->bc;
+                dest.back()->bc->ca = this->data->ca;
+                this->data->ca->bc = dest.back()->bc;
+            } else {
+                dest.back()->bc = this->data->ca;
+            }
             dest.back()->ab = this->data->bc;
-            dest.back()->bc = this->data->ca;
             dest.back()->ca = this->data;
 
             this->data->a = b;
             this->data->b = v;
             this->data->c = a;
-
-            if (this->data->ca->b == v) {
+            this->data->bc->update_reference(dest.back(), this->data);
+            if (this->data->ca->b == v&& this->data->ca->c) {
                 /// The neighbour node has already been split. We need to stitch the triangles together
+                this->data->ca->bc = dest.back();
                 this->data->bc = dest.at(dest.size()-2);
-                this->data->ab->bc = dest.back();
             } else {
                 this->data->bc = this->data->ca;
             }
@@ -277,11 +317,11 @@ namespace Lab2 {
         /// New triangle 1: b v a
         /// New triangle 2: c v b
         /// Old triangle: a v c
-        dest.push_back(std::make_shared<Triangle>(b, v, a));
+        dest.push_back(std::make_shared<Triangle>(b, v, a, dest.size()));
         dest.back()->bc = this->data;
         dest.back()->ca = this->data->ab;
 
-        dest.push_back(std::make_shared<Triangle>(c, v, b));
+        dest.push_back(std::make_shared<Triangle>(c, v, b,dest.size()));
         dest.back()->ab = this->data;
         dest.back()->bc = dest.at(dest.size() - 2);
         dest.back()->ca = this->data->bc;

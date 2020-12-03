@@ -21,7 +21,6 @@ namespace Lab2 {
          */
         static bool right(const Vertex& a, const Vertex& b, const Vertex& c);
         static bool on(const Vertex& a, const Vertex& b, const Vertex& c);
-
         float len();
         Vertex operator+(const Vertex& other) const;
         Vertex operator-(const Vertex& other) const;

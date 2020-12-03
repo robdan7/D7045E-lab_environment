@@ -50,8 +50,7 @@ namespace Lab2 {
         }
     }
 
-    std::vector<uint32_t> calc_convex_hull(std::vector<Vertex> &sorted_list) {
-        std::vector<uint32_t> line_strip;
+    void calc_convex_hull(std::vector<Vertex>& sorted_list, std::vector<uint32_t>& line_strip) {
         for (int i = 0; i < sorted_list.size(); ++i) {
             while (line_strip.size() >= 2 && (Vertex::right(sorted_list[line_strip[line_strip.size()-2]], sorted_list[line_strip.back()], sorted_list[i]) || Vertex::on(sorted_list[line_strip[line_strip.size()-2]], sorted_list[line_strip.back()], sorted_list[i]))) {
                 line_strip.pop_back();
@@ -61,20 +60,17 @@ namespace Lab2 {
 
         uint32_t start_index = line_strip.size()-1;
         for (int i = sorted_list.size()-2; i >= 0; --i) {
-            while (line_strip.size()-start_index >= 2 && (Vertex::right(sorted_list[line_strip[line_strip.size()-2]], sorted_list[line_strip.back()], sorted_list[i]) || Vertex::on(sorted_list[line_strip[line_strip.size()-2]], sorted_list[line_strip.back()], sorted_list[i]))) {
+            while (line_strip.size()-start_index >= 2 && (Vertex::right(sorted_list[line_strip[line_strip.size()-2]], sorted_list[line_strip.back()], sorted_list[i])|| Vertex::on(sorted_list[line_strip[line_strip.size()-2]], sorted_list[line_strip.back()], sorted_list[i]))) {
                 line_strip.pop_back();
             }
             line_strip.push_back(i);
         }
-
-
-        return std::move(line_strip);
     }
 
     std::shared_ptr<Search_tree> build_helper(std::vector<uint32_t>& hull,std::vector<Vertex>& vertices, std::vector<std::shared_ptr<Triangle>>& triangles, uint32_t start_index, uint32_t end_index) {
         if (end_index - start_index == 1) {
             /// Base case
-            triangles.push_back(std::make_shared<Triangle>(&vertices[hull[0]], &vertices[hull[start_index]],&vertices[hull[end_index]]));
+            triangles.push_back(std::make_shared<Triangle>(&vertices[hull[0]], &vertices[hull[start_index]],&vertices[hull[end_index]],triangles.size()));
 
             auto leaf = std::make_shared<Leaf>(nullptr, triangles.back());
             triangles.back()->set_leaf(leaf);

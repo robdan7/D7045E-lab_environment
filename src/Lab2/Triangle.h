@@ -7,7 +7,7 @@ namespace Lab2 {
 
 
     struct Triangle {
-        Triangle(Vertex* a, Vertex* b, Vertex* c);
+        Triangle(Vertex* a, Vertex* b, Vertex* c, uint32_t triangle_ID);
         void set_leaf(std::shared_ptr<Leaf> leaf);
         virtual bool is_inside(const Vertex& v);
         virtual bool on_edge(const Vertex& v);
