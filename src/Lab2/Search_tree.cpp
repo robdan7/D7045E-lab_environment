@@ -84,13 +84,7 @@ namespace Lab2 {
     }
 
 
-    void stitch_fake_triangles(std::shared_ptr<Triangle> old_triangle, std::shared_ptr<Triangle> new_triangle,Vertex *v) {
-        old_triangle->b = v;
-        old_triangle->bc->ca = new_triangle;
-        new_triangle->bc = old_triangle->bc;
-        new_triangle->ca = old_triangle;
-        old_triangle->bc = new_triangle;
-    }
+
 
     uint32_t Tri_node::insert(Vertex *v, std::vector<std::shared_ptr<Triangle>> &dest, std::vector<Vertex> &vertices) {
 
@@ -203,10 +197,21 @@ namespace Lab2 {
         return this->child_C->find(v);
     }
 
+    /**
+     * Helper function for stitching together fake triangles.
+     * @param old_triangle - The old fake triangle
+     * @param new_triangle - The new fake triangle to insert.
+     * @param v
+     */
+    void stitch_fake_triangles(std::shared_ptr<Triangle> old_triangle, std::shared_ptr<Triangle> new_triangle,Vertex *v) {
+        old_triangle->b = v;
+        old_triangle->bc->ca = new_triangle;
+        new_triangle->bc = old_triangle->bc;
+        new_triangle->ca = old_triangle;
+        old_triangle->bc = new_triangle;
+    }
 
     uint32_t Leaf::insert(Vertex *v, std::vector<std::shared_ptr<Triangle>> &dest, std::vector<Vertex> &vertices) {
-        /// split data and return new triangles.
-
         Vertex *a = this->data->a;
         Vertex *b = this->data->b;
         Vertex *c = this->data->c;
