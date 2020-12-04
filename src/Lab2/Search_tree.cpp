@@ -51,8 +51,6 @@ namespace Lab2 {
             }
             return 0;
         } else {
-            /// TODO Four triangles need to be put together here. Page 19 in the lab specification.
-
             auto left_triangles = this->child_left->insert(v, dest, vertices);
             auto right_triangles = this->child_right->insert(v, dest, vertices);
 

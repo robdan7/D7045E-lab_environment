@@ -9,9 +9,8 @@ BEGIN_SHADER_CONST(Global_uniforms)
     SET_SHADER_CONST(Engine::Float4_data, color);
 END_SHADER_CONST(Global_uniforms)
 
-#include "Vertex.h"
 #include "Algorithms.h"
-#include <iostream>
+#include "Color.h"
 
 double pi = 2 * acos(0.0);
 Lab2::Color color_A{86/255.0f,24/255.0f,108/255.0f};

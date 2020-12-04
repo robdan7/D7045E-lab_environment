@@ -128,7 +128,7 @@ namespace Lab2 {
         std::vector<uint32_t> inside_vertices(vertices.size());
         std::iota(inside_vertices.rbegin(), inside_vertices.rend(), 0);  /// Fill with increasing numbers
 
-
+        /// The following code extracts all points that are not a part of the convex hull
         uint32_t j = convex_hull.size()-2;
         uint32_t i = 0;
         while (j >= i) {
@@ -138,13 +138,14 @@ namespace Lab2 {
                 inside_vertices.pop_back();
                 j--;
             } else {
+                /// delete lower hull vertex
                 inside_vertices[vertices.size()-1-convex_hull[i]] = inside_vertices.back();
                 inside_vertices.pop_back();
                 i++;
             }
         }
 
-        for (const auto& index : inside_vertices) {
+        for (const auto& index : inside_vertices) { /// Add all points that are not in the convex hull.
             tree->insert(&vertices[index],triangles,vertices);
         }
     }

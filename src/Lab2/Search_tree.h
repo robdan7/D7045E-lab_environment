@@ -70,7 +70,6 @@ namespace Lab2 {
     class Node : public I_node{
         friend Search_tree;
         friend Tri_node;
-        //friend Node;
     public:
         std::shared_ptr<Triangle> find(const Vertex &v) override;
 
