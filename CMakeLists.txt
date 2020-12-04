@@ -31,4 +31,4 @@ endif()
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/include/glm)
 add_subdirectory(src/Engine)
-add_subdirectory(src/Lab2)
+add_subdirectory(src/Lab3)
