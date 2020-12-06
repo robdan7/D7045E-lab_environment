@@ -68,6 +68,13 @@ namespace Engine {
 
     class Perspective_camera : public Camera{
     public:
+        /**
+         *
+         * @param znear
+         * @param zfar
+         * @param fov - Field of view in radians
+         * @param aspect_ratio
+         */
         Perspective_camera(float znear, float zfar, float fov, float aspect_ratio);
         void on_update() override;
 

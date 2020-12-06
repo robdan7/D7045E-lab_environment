@@ -4,6 +4,7 @@
 #include "Shader_constants.h"
 #include "Camera.h"
 #include "Shader.h"
+#include "Material.h"
 
 namespace Engine {
     namespace Render {
@@ -30,23 +31,23 @@ namespace Engine {
 //        }
 
 
-        void Renderer::submit_streamed(const std::shared_ptr<Engine::Shader>& shader,std::shared_ptr<Engine::Vertex_array> vertex_array, Polygon_type polygon_type,
+        void Renderer::submit_streamed(const std::shared_ptr<Engine::Material>& material,std::shared_ptr<Engine::Vertex_array> vertex_array, Polygon_type polygon_type,
                                        uint32_t start_vertex, uint32_t vertex_count, uint32_t instances) {
-            shader->bind();
+            material->apply_material();
             vertex_array->bind();
             Render_command::draw_stream(vertex_array,polygon_type,start_vertex,vertex_count,instances);
             vertex_array->unbind();
-            shader->unbind();
+            material->disable();
         }
 
-        void Renderer::submit_indexed(const std::shared_ptr<Engine::Shader> &shader,
+        void Renderer::submit_indexed(const std::shared_ptr<Engine::Material> &material,
                                       std::shared_ptr<Engine::Vertex_array> vertex_array, Polygon_type polygon_type,
                                       int instances) {
-            shader->bind();
+            material->apply_material();
             vertex_array->bind();
             Render_command::draw_indexed(vertex_array,polygon_type,instances);
             vertex_array->unbind();
-            shader->unbind();
+            material->disable();
 
         }
 

@@ -88,13 +88,10 @@ namespace Engine {
         }
 
         static void resize_buffer(uint32_t type, uint32_t ID, uint32_t old_size, const int new_size, uint32_t draw_type) {
-
             glBindBuffer(GL_COPY_READ_BUFFER, (GLuint)(ID));
-            //uint8_t data[new_size];
             std::vector<uint8_t> data(new_size);
-            glGetBufferSubData(GL_COPY_READ_BUFFER, 0, old_size < new_size ? old_size : new_size, &data);
-            reset_buffer(type, ID, (float*)&data[0], new_size, draw_type);
-
+            glGetBufferSubData(GL_COPY_READ_BUFFER, 0, old_size < new_size ? old_size : new_size, &data[0]);
+            GL_Raw_buffer::reset_buffer(GL_COPY_READ_BUFFER, ID, &data[0], new_size, draw_type);
             glBindBuffer(GL_COPY_READ_BUFFER, 0);
         }
 
@@ -159,7 +156,7 @@ namespace Engine {
     }
 
     void GL_vertex_buffer::resize_buffer(uint32_t size) {
-        GL_Raw_buffer::resize_buffer(GL_ARRAY_BUFFER, this->m_buffer_ID, this->get_size(), size,this->m_GL_draw_type);
+        GL_Raw_buffer::resize_buffer(GL_ARRAY_BUFFER,this->m_buffer_ID,this->get_size(),size,this->m_GL_draw_type);
         this->set_size(size);
     }
 

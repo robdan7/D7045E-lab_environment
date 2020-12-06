@@ -29,7 +29,6 @@ namespace Engine {
 
     void Perspective_camera::look_at(const glm::vec3 &position) {
         this->m_focus = position;
-
     }
 
     void Perspective_camera::set_rotation(glm::vec3 axis, float angle) {
