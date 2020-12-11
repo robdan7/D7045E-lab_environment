@@ -14,10 +14,6 @@ namespace Engine {
         glBindVertexArray(0);
     }
 
-    /**
-     * Append a vertex buffer to this vertex array.
-     * @param vertex_buffer
-     */
     void GL_vertex_array::add_vertex_buffer(const std::shared_ptr<Vertex_buffer>& vertex_buffer, uint32_t instance_divisor) {
 
         //CORE_ASSERT(vertex_buffer->get_layout().get_elements().size(), "Vertex buffer layout is undefined!");
@@ -50,11 +46,7 @@ namespace Engine {
         m_vertex_buffers.push_back(vertex_buffer);
     }
 
-    /**
-     * Set the index buffer that points to vertex indexes. There can only be one of these in a vertex
-     * array.
-     * @param index_buffer
-     */
+
     void GL_vertex_array::set_index_buffer(const std::shared_ptr<Index_buffer>& index_buffer) {
         glBindVertexArray(this->m_render_ID);
         index_buffer->bind();

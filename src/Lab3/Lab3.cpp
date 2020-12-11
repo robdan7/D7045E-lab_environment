@@ -3,6 +3,8 @@
 #include "GraphicsNode.h"
 #include "Monochrome_material.h"
 #define PI (atan(1)*4)
+
+/// Global uniform container.
 BEGIN_SHADER_CONST(Global_uniforms)
     SET_SHADER_CONST(Engine::Matrix4_data, view_matrix)
     SET_SHADER_CONST(Engine::Matrix4_data, projection_matrix)

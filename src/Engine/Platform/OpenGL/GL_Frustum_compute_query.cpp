@@ -13,7 +13,7 @@ namespace Engine {
 
     void GL_Frustum_compute_query::execute(uint32_t instances) {
         /**
-         * This executes a transform feedback query. No rasterization is performed here.
+         * This executes a transform feedback query. No rasterisation is performed here.
          */
         Frustum_compute_query::execute(instances);
         this->shader_program->bind();
@@ -39,12 +39,11 @@ namespace Engine {
     GL_Frustum_compute_query::GL_Frustum_compute_query(std::shared_ptr<Vertex_buffer> data_buffer, std::shared_ptr<Vertex_buffer> instance_data)
             : Frustum_compute_query(data_buffer, instance_data) {
 
-        // TODO do some actual frustum culling.
         // TODO Code cleanup. String concatenation results in unnecessary temporary strings.
 
         /**
          * This frustum culling query creates a passthrough vertex and geometry shader
-         * with a filter for points that are not within the view frustum. Not that uniforms
+         * with a filter for points that are not within the view frustum. Note that uniforms
          * are assumed to exist in a global space. This won't work unless view and projection
          * matrices are not defined.
          */

@@ -12,7 +12,7 @@ namespace Engine {
     };
 
 
-    // TODO Move stuff to cpp files. I know the header files are pre compiled, but it's better that way.
+    // TODO Move stuff to cpp files.
 
     /**
      * This returns the complete size of a data type in floats.
@@ -249,6 +249,7 @@ namespace Engine {
         virtual void set_layout(const Buffer_layout& layout) = 0;
         virtual Buffer_layout& get_layout() = 0;
         virtual int get_instance_divisor() = 0;
+
         virtual void set_instance_divisor(int divisor) = 0;
 
         virtual uint32_t get_ID() = 0;

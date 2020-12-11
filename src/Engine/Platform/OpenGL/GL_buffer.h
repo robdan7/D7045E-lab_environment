@@ -21,11 +21,6 @@ namespace Engine {
          */
         int get_instance_divisor() override;
 
-        /**
-         * Set how many instances there should be between two attributes in the buffer.
-         * There should be no need to set this value if the buffer contains per vertex values.
-         * @param divisor
-         */
         void set_instance_divisor(int divisor) override;
 
         void reset_buffer(float *vertices, uint32_t size) override;

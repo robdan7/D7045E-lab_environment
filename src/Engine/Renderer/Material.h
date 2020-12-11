@@ -1,6 +1,10 @@
 #pragma once
 namespace Engine {
     class Shader;
+    /**
+     * Not sure if material belongs to the render folder.
+     * TODO move this, maybe
+     */
     class Material {
     public:
         Material(std::shared_ptr<Shader> shader) : m_shader(shader){}
