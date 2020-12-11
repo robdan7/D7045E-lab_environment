@@ -101,12 +101,10 @@ namespace Engine {
         }
     }
 
-    void Instanced_mesh::update_instance(float *data, uint32_t instance) {
+    void Instanced_mesh::update_instance(float *data,glm::vec3 position, float radius, uint32_t instance) {
         this->m_instance_buffer_data->set_sub_data(data, this->m_ID_pointers.offset(instance) * this->m_instance_buffer_data->get_layout().get_stride(), this->m_instance_buffer_data->get_layout().get_stride());
-    }
-
-    int Instanced_mesh::debug_info() {
-        return this->m_frustum_pipeline->fetch_result();
+        float sphere[] = {position.x, position.y, position.z, radius};
+        this->m_instance_bounding_spheres->set_sub_data(sphere, instance * m_instance_bounding_spheres->get_layout().get_stride(), m_instance_bounding_spheres->get_layout().get_stride());
     }
 
     Transform::Transform(glm::vec3 position) {
@@ -114,6 +112,7 @@ namespace Engine {
         this->m_position = position;
     }
 
+    /*
     Static_mesh_component::Static_mesh_component(std::shared_ptr<Instanced_mesh> mesh) : p_mesh(mesh) {
         //this->add_component<Transform>();
         //auto transform = this->get_component<Transform>();
@@ -135,7 +134,7 @@ namespace Engine {
         this->p_mesh = mesh;
         this->m_mesh_ID  = this->p_mesh->add_instance(reinterpret_cast<float *>(&transform.m_matrix[0][0]), transform.m_position, 1.0f);
     }
-
+*/
 //    void Static_mesh_component::on_update() {
 //        Entity::on_update();
 //        auto transform = this->get_component<Transform>();

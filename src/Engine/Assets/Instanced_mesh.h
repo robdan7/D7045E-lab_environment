@@ -7,7 +7,7 @@
 #include <Renderer/Vertex_array.h>
 #include <Renderer/Render_encoder.h>
 #include <Utils/Sparse_set.h>
-#include "FBX_mesh.h"
+#include "Mesh_import.h"
 #include "Renderer/Material.h"
 //#include <ECS/Entity.h>
 namespace Engine {
@@ -75,20 +75,13 @@ namespace Engine {
         void on_render();
 
         /**
-         * TODO remove in future update. This is just a debug for
-         * how many instances that are rendered.
-         * @return
-         */
-        int debug_info();
-
-        /**
          * Add another instance of this mesh. This is also a work in progress.
          * @param data
          * @param position
          * @param radius
          */
         uint32_t add_instance(float* data, glm::vec3 position, float radius);
-        void update_instance(float* data, uint32_t ID);
+        void update_instance(float* data,glm::vec3 position,float radius, uint32_t ID);
         void delete_instance(uint32_t ID);
     public:
         std::shared_ptr<Frustum_compute_query> m_frustum_pipeline;
@@ -109,7 +102,12 @@ namespace Engine {
         Transform(glm::vec3 position);
     };
 
-    class Static_mesh_component {
+    /**
+     * Test class for Game entities with mesh component.
+     * This has been purposely removed due to the use of external libraries.
+     */
+     /*
+    class Static_mesh_component {//: public ECS::Entity{
     public:
         Static_mesh_component(std::shared_ptr<Instanced_mesh> mesh);
         Static_mesh_component(std::shared_ptr<Instanced_mesh> mesh, glm::vec3 position);
@@ -120,5 +118,6 @@ namespace Engine {
         uint32_t m_mesh_ID;
         std::shared_ptr<Instanced_mesh> p_mesh;
     };
+      */
 }
 

@@ -8,6 +8,11 @@ namespace Engine {
         enum class Polygon_type {
             DOT, LINE, TRIANGLE,QUAD
         };
+        /**
+         * This is a simple interface for doing instanced or streamed rendering with the same parameters.
+         *
+         * WORK IN PROGRESS
+         */
         class Render_encoder {
         public:
             inline Render_encoder(Polygon_type polygon_type) : polygons(polygon_type) {}

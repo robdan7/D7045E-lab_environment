@@ -6,6 +6,9 @@ namespace Engine {
     class Shader;
     class Material;
     namespace Render {
+        struct Render_debug {
+            uint32_t rendered_objects = 0;
+        };
         /**
          * These are planned to be the commands that the renderer actually sends when
          * it is time to render. Currently it is done whenever submit() is called, but
@@ -53,7 +56,8 @@ namespace Engine {
              * will automatically be set as the target viewport unless any other is
              * specified.
              */
-            static void begin_scene(const Camera& viewport);
+            //static void begin_scene(const Camera& viewport);
+            static void begin_scene();
 
             /**
              * Set the current camera used for rendering. Updating the camera after switching to it will
@@ -69,6 +73,7 @@ namespace Engine {
             static void submit_streamed(const std::shared_ptr<Engine::Material>& material,std::shared_ptr<Engine::Vertex_array> vertex_array, Polygon_type polygon_type, uint32_t start_vertex, uint32_t vertex_count, uint32_t instances);
             static void submit_indexed(const std::shared_ptr<Engine::Material>& material,std::shared_ptr<Engine::Vertex_array> vertex_array,Polygon_type polygon_type, int instances);
             inline static Renderer_API::API get_API() {return Renderer_API::get_API();}
+            static const Render_debug* get_debug();
         };
     }
 }

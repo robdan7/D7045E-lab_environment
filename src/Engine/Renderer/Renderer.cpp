@@ -8,6 +8,7 @@
 
 namespace Engine {
     namespace Render {
+        Render_debug *debug = new Render_debug();
         Renderer_API *Render_command::s_render_API = new GL_renderer_API();
 
 
@@ -33,22 +34,32 @@ namespace Engine {
 
         void Renderer::submit_streamed(const std::shared_ptr<Engine::Material>& material,std::shared_ptr<Engine::Vertex_array> vertex_array, Polygon_type polygon_type,
                                        uint32_t start_vertex, uint32_t vertex_count, uint32_t instances) {
-            material->apply_material();
+            material->bind();
             vertex_array->bind();
             Render_command::draw_stream(vertex_array,polygon_type,start_vertex,vertex_count,instances);
             vertex_array->unbind();
             material->disable();
+            debug->rendered_objects += instances;
         }
 
         void Renderer::submit_indexed(const std::shared_ptr<Engine::Material> &material,
                                       std::shared_ptr<Engine::Vertex_array> vertex_array, Polygon_type polygon_type,
                                       int instances) {
-            material->apply_material();
+            material->bind();
             vertex_array->bind();
             Render_command::draw_indexed(vertex_array,polygon_type,instances);
             vertex_array->unbind();
             material->disable();
+            debug->rendered_objects += instances;
+        }
 
+        const Render_debug *Renderer::get_debug() {
+            return debug;
+        }
+
+        void Renderer::begin_scene() {
+            Render_command::clear();
+            debug->rendered_objects = 0;
         }
 
 //        void Renderer::submit_arrays(const std::shared_ptr<Engine::Shader> &shader,

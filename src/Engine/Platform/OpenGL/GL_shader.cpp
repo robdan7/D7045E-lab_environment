@@ -60,35 +60,6 @@ namespace Engine {
             std::string s(out.str());
             //CORE_LOG_ERROR("Platform::GL_shader:: Could not link shader program. Error code:\n{0}", s);
         }
-//        } else {
-//
-//
-//            GLint length = 0;
-//            glGetProgramiv(this->m_program, GL_PROGRAM_BINARY_LENGTH, &length);
-//            char data[length];
-//            GLenum format = 0;
-//            glGetProgramBinary(this->m_program, length, NULL, &format, data);
-////            CORE_LOG_INFO("Binary format: {0}", format);
-//
-//
-//            std::ofstream out("shader_" + std::to_string(this->m_program) + ".bin", std::ios::binary);
-//            out.write(data, length);
-//            out.close();
-//            CORE_LOG_INFO("Writing shader {0} to file, bytes: {1}, {2}", "shader_" + std::to_string(this->m_program) + ".bin", length, sizeof(data));
-////
-//            std::ifstream inputStream("shader_" + std::to_string(this->m_program) + ".bin", std::ios::binary);
-//////            std::ifstream input_stream(fName, std::ios::binary);
-//            std::istreambuf_iterator<char> start_it(inputStream), end_it;
-//            std::vector<char> buffer(start_it, end_it);
-//        inputStream.close();
-//
-//
-////            CORE_LOG_INFO("Wrote {0} bytes to char vector", buffer.size());
-//            glProgramBinary(this->m_program, format, buffer.data(), buffer.size() );
-////            GL_shader(buffer.data());
-////            test(this->m_program, buffer);
-//
-//        }
     }
 
     void GL_shader::attach_shader_stage(std::shared_ptr<Shader_stage> shader_stage) {
@@ -150,7 +121,6 @@ namespace Engine {
     }
 
     GL_shader_stage::~GL_shader_stage() {
-//        Shader_stage::~Shader_stage();
         glDeleteShader(shader);
     }
 }

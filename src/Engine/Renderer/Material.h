@@ -1,10 +1,10 @@
 #pragma once
-#include <Renderer/Shader.h>
 namespace Engine {
+    class Shader;
     class Material {
     public:
         Material(std::shared_ptr<Shader> shader) : m_shader(shader){}
-        virtual void apply_material() {
+        virtual void bind() {
             this->m_shader->bind();
         }
         void disable() {

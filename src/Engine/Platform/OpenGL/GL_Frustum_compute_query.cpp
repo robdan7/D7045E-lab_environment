@@ -12,6 +12,9 @@ namespace Engine {
     }
 
     void GL_Frustum_compute_query::execute(uint32_t instances) {
+        /**
+         * This executes a transform feedback query. No rasterization is performed here.
+         */
         Frustum_compute_query::execute(instances);
         this->shader_program->bind();
         this->m_vao->bind();
@@ -19,10 +22,8 @@ namespace Engine {
 
         glEnable(GL_RASTERIZER_DISCARD);
         glBeginTransformFeedback(GL_POINTS);
-//        glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, m_last_frustum_query);
         glBeginQueryIndexed(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN,1, m_last_frustum_query);
         glDrawArrays(GL_POINTS, 0, instances);
-//        glEndQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN);
         glEndQueryIndexed(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN,1);
         glEndTransformFeedback();
         glDisable(GL_RASTERIZER_DISCARD);
@@ -40,6 +41,13 @@ namespace Engine {
 
         // TODO do some actual frustum culling.
         // TODO Code cleanup. String concatenation results in unnecessary temporary strings.
+
+        /**
+         * This frustum culling query creates a passthrough vertex and geometry shader
+         * with a filter for points that are not within the view frustum. Not that uniforms
+         * are assumed to exist in a global space. This won't work unless view and projection
+         * matrices are not defined.
+         */
 
         std::string vertex_shader = R"(
             #version 440 core
