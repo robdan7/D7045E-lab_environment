@@ -18,6 +18,14 @@ namespace Engine {
     class Instanced_mesh {
     private:
 
+        /**
+         * The original idea was to allows for multiple levels of detail. However, the transform feedback
+         * didn't work multiple streams and matrices for some reason.
+         * TODO implement multiple levels of detail computed on the CPU side and the option to switch
+         * between frustum culling per instance, per chunk or not at all. This should be taken care
+         * of by the engine. The instanced model should only have to submit itself to the renderer with some hints
+         * for how it should be rendered.
+         */
         struct Mesh_LOD {
         private:
             /**

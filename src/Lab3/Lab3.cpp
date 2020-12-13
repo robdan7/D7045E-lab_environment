@@ -10,6 +10,11 @@ BEGIN_SHADER_CONST(Global_uniforms)
     SET_SHADER_CONST(Engine::Matrix4_data, projection_matrix)
 END_SHADER_CONST(Global_uniforms)
 
+/**
+ * Disclaimer: I changed the simple, uniform and distance based, lighting to a regular diffuse light.
+ * It's so much prettier
+ */
+
 class Settings_panel : public Engine::ImGui_panel {
 public:
     void on_imgui_render() override {
@@ -141,6 +146,8 @@ int main(int argc, char** argv) {
 
     /// Create raw mesh source
     Engine::Import_mesh mesh_data;
+
+    /// vertex, normal
     mesh_data.vertices = {-0.5f, -0.5f, 0.5f, 0, 0, 1,
                           0.5f, -0.5f, 0.5f, 0, 0, 1,
                           0.5f, 0.5f, 0.5f, 0, 0, 1,
