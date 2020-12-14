@@ -4,7 +4,7 @@
 #include <Platform/OpenGL/OpenGL.h>
 #include <iostream>
 #include <fstream>
-
+#include <sstream>
 namespace Engine {
 
     GL_Frustum_compute_query::~GL_Frustum_compute_query() {
@@ -103,7 +103,8 @@ namespace Engine {
         auto vertex_stage = std::make_shared<GL_shader_stage>(OPENGL_VERTEX_SHADER, std::move(vertex_shader));
 
         /// -------- Geometry shader ---------
-        std::string geometry = R"(
+        std::ostringstream geometry_2;
+        std::string geom_data = R"(
             #version 440 core
             layout (invocations = 2, points) in;
             layout (points, max_vertices = 10) out;
@@ -117,23 +118,24 @@ namespace Engine {
 
         )";
 
-        geometry += "in Instance_data {\n";
+        geom_data += "in Instance_data {\n";
         for (int x = 0; x < i; x++) {
-            geometry += data[x] + ";\n";
+            geom_data += data[x] + ";\n";
         }
-        geometry += "} instance_output[];\n";
+        geom_data += "} instance_output[];\n";
 
         /// Create one output buffer for each stream/LOD.
         for(int buffers = 0; buffers < 4; buffers++) {
             std::string stream = std::to_string(buffers);
-            geometry += "layout(stream = "+stream+", xfb_buffer = "+stream+", xfb_offset=0) out Geometry_data_stream_"+stream+" {\n";
+            geom_data += "layout(stream = "+stream+", xfb_buffer = "+stream+", xfb_offset=0) out Geometry_data_stream_"+stream+" {\n";
             for (int x = 0; x < i; x++) {
-                geometry += data[x] + ";\n";
+                geom_data += data[x] + ";\n";
             }
-            geometry += "} geometry_data_stream_"+std::to_string(buffers)+";\n";
+            geom_data += "} geometry_data_stream_"+std::to_string(buffers)+";\n";
         }
+        geometry_2.write(geom_data.c_str(), geom_data.size());
 
-        geometry += R"(
+        geom_data = R"(
             void main() {
 //                for (int i = 0; i < gl_in.length(); i++) {
                     vec3 abs_position = abs(vertex_data[0].position.xyz)-vertex_data[0].position.w;
@@ -143,19 +145,20 @@ namespace Engine {
         std::string stream = std::to_string(1);
         iterator = this->m_result_buffer->get_layout().begin();
         while (iterator != this->m_result_buffer->get_layout().end()) {
-            geometry += "geometry_data_stream_"+stream+".instance_" + iterator->m_name + " = instance_output[0].instance_"+iterator->m_name + ";\n";
-            geometry += "geometry_data_stream_1.instance_" + iterator->m_name + " = instance_output[0].instance_"+iterator->m_name + ";\n";
+            geom_data += "geometry_data_stream_"+stream+".instance_" + iterator->m_name + " = instance_output[0].instance_"+iterator->m_name + ";\n";
+            geom_data += "geometry_data_stream_1.instance_" + iterator->m_name + " = instance_output[0].instance_"+iterator->m_name + ";\n";
             iterator ++;
         }
 
-        geometry += R"(
+        geom_data += R"(
                 EmitStreamVertex(gl_InvocationID);
                 EndStreamPrimitive(gl_InvocationID);
                 }
             }
             )";
+        geometry_2.write(geom_data.c_str(),geom_data.size());
 
-        auto geometry_stage = std::make_shared<GL_shader_stage>(OPENGL_GEOMETRY_SHADER, std::move(geometry));
+        auto geometry_stage = std::make_shared<GL_shader_stage>(OPENGL_GEOMETRY_SHADER, std::move(geometry_2.str()));
 
         this->shader_program = std::unique_ptr<GL_shader>(new GL_shader({vertex_stage, geometry_stage}));
         this->shader_program->compile();
