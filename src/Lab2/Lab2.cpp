@@ -260,14 +260,16 @@ int main(int argc, char** argv) {
             0.5f,0,
             0.5f,0.5f
     };
-    GLuint ID;
-    glCreateBuffers(1, &ID);
-    glBindBuffer(GL_ARRAY_BUFFER, (GLuint)(ID));
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices,GL_STATIC_DRAW);
-    //glBindBuffer(GL_ARRAY_BUFFER, 0);
+    auto buffer = Engine::Vertex_buffer::Create(vertices,sizeof(vertices),Engine::Raw_buffer::Access_frequency::STATIC, Engine::Raw_buffer::Access_type::DRAW);
+    buffer->set_layout(Engine::Buffer_layout{{Engine::Shader_data::Float2, "position"}});
+    buffer->bind();
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,0,0);
+    auto vao = Engine::Vertex_array::Create();
+    vao->add_vertex_buffer(buffer);
+    vao->bind();
+    //glEnableVertexAttribArray(0);
+    //glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,0,0);
+
 
     shader->bind();
     while (!window->should_close()) {
