@@ -92,14 +92,11 @@ namespace Engine {
         void update_instance(float* data,glm::vec3 position,float radius, uint32_t ID);
         void delete_instance(uint32_t ID);
     public:
-        std::shared_ptr<Frustum_compute_query> m_frustum_pipeline;
-    public:
         Sparse_set<uint32_t> m_ID_pointers;
         std::vector<uint32_t> m_instance_IDs;
         uint32_t m_last_deleted;
         std::vector<Mesh_LOD> m_lod;    /// List of all LODs.
         std::shared_ptr<Vertex_buffer> m_instance_buffer_data;  /// uncompressed instance storage.
-        std::shared_ptr<Vertex_buffer> m_instance_bounding_spheres; /// Bounding spheres used for future frustum culling.
         uint32_t m_instances{};
     };
 

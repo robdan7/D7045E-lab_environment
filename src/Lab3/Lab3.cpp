@@ -32,15 +32,15 @@ public:
         ImGui::SliderFloat("Camera pitch",&this->m_pitch, -PI/2+0.01,PI/2-0.01);
         ImGui::SliderFloat("Camera center offset", &this->m_distance, 5,130);
         ImGui::SliderFloat("Camera FOV", &this->m_fov, 10, 90);
-        if (ImGui::Button("Toggle view frustum")) {
+        /*if (ImGui::Button("Toggle view frustum")) {
             this->frustum_update = !this->frustum_update;
-        }
+        }*/
         ImGui::SameLine();
-        if (this->frustum_update) {
+        /*if (this->frustum_update) {
             ImGui::Text("Enabled");
         } else {
             ImGui::Text("Disabled");
-        }
+        }*/
         ImGui::End();
     }
     const float& yaw() {
@@ -52,9 +52,9 @@ public:
     const float& offset() {
         return this->m_distance;
     }
-    const bool& update_frustum() {
+    /*const bool& update_frustum() {
         return this->frustum_update;
-    }
+    }*/
     const float& fov() {
         return this->m_fov;
     }
@@ -66,7 +66,7 @@ private:
     float m_yaw = 0;
     float m_pitch = -0.5;
     float m_distance = 15;
-    bool frustum_update = true;
+    //bool frustum_update = true;
     int objects = 0;
     float m_fov = 45;
 };
@@ -256,10 +256,10 @@ int main(int argc, char** argv) {
         mouse_listener.on_update();
 
         /// disabling frustum updates will lock all visible blocks, but the camera can still move.
-        if (panel->update_frustum()) {
+        /*if (panel->update_frustum()) {
             pink_model->on_update();
             green_model.on_update();
-        }
+        }*/
         green_model.on_render();
         pink_model->on_render();
         gui.on_update();

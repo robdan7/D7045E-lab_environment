@@ -8,10 +8,10 @@ namespace Engine {
         this->m_instance_buffer_data = std::shared_ptr<Vertex_buffer>(Vertex_buffer::Create(nullptr, reserved_instances*layout.get_stride(), Vertex_buffer::Access_frequency::DYNAMIC, Vertex_buffer::Access_type::DRAW));
         this->m_instance_buffer_data->set_layout(instance_layout);
 
-        this->m_instance_bounding_spheres = std::shared_ptr<Vertex_buffer>(Vertex_buffer::Create(nullptr,reserved_instances*sizeof(float)*4, Vertex_buffer::Access_frequency::DYNAMIC, Vertex_buffer::Access_type::DRAW));
-        this->m_instance_bounding_spheres->set_layout(Buffer_layout{{Shader_data::Float4, "position"}});
+        //this->m_instance_bounding_spheres = std::shared_ptr<Vertex_buffer>(Vertex_buffer::Create(nullptr,reserved_instances*sizeof(float)*4, Vertex_buffer::Access_frequency::DYNAMIC, Vertex_buffer::Access_type::DRAW));
+        //this->m_instance_bounding_spheres->set_layout(Buffer_layout{{Shader_data::Float4, "position"}});
 
-        this->m_frustum_pipeline = Frustum_compute_query::Create(m_instance_buffer_data, m_instance_bounding_spheres);
+        //this->m_frustum_pipeline = Frustum_compute_query::Create(m_instance_buffer_data, m_instance_bounding_spheres);
     }
 
     void Instanced_mesh::add_LOD(Import_mesh& mesh, const std::shared_ptr<Material>& material) {
@@ -42,7 +42,7 @@ namespace Engine {
                         &mesh_material.vertex_index[0], mesh_material.vertex_index.size() * sizeof(uint32_t), Engine::Raw_buffer::Access_frequency::STATIC));
             }
             this->m_lod.back().mesh_partitions.back().m_vao->add_vertex_buffer(this->m_lod.back().p_buffer, 0);
-            this->m_lod.back().mesh_partitions.back().m_vao->add_vertex_buffer(this->m_frustum_pipeline->get_result_buffer(), 1);
+            this->m_lod.back().mesh_partitions.back().m_vao->add_vertex_buffer(this->m_instance_buffer_data, 1);
 
         }
         //delete mesh;
@@ -66,12 +66,12 @@ namespace Engine {
         auto instance_data_size = this->m_instance_buffer_data->get_layout().get_stride();
         if (this->m_instance_buffer_data->get_size() < this->m_instances*instance_data_size) {
             this->m_instance_buffer_data->resize_buffer(this->m_instance_buffer_data->get_size()+instance_data_size);
-            this->m_instance_bounding_spheres->resize_buffer(this->m_instance_bounding_spheres->get_size() + this->m_instance_bounding_spheres->get_layout().get_stride());
+            //this->m_instance_bounding_spheres->resize_buffer(this->m_instance_bounding_spheres->get_size() + this->m_instance_bounding_spheres->get_layout().get_stride());
         }
 
         this->m_instance_buffer_data->set_sub_data(data, this->m_instances * instance_data_size, instance_data_size);
         float sphere[] = {position.x, position.y, position.z, radius};
-        this->m_instance_bounding_spheres->set_sub_data(sphere, this->m_instances * m_instance_bounding_spheres->get_layout().get_stride(), m_instance_bounding_spheres->get_layout().get_stride());
+        //this->m_instance_bounding_spheres->set_sub_data(sphere, this->m_instances * m_instance_bounding_spheres->get_layout().get_stride(), m_instance_bounding_spheres->get_layout().get_stride());
         this->m_instances ++;
 
         return ID;
@@ -79,12 +79,12 @@ namespace Engine {
 
     void Instanced_mesh::on_render() {
         for (auto& lod : this->m_lod) {
-           lod.on_render(this->m_frustum_pipeline->fetch_result());
+           lod.on_render(this->m_instances);
         }
     }
 
     void Instanced_mesh::on_update() {
-        this->m_frustum_pipeline->execute(this->m_instances);
+        //this->m_frustum_pipeline->execute(this->m_instances);
     }
 
     void Instanced_mesh::delete_instance(uint32_t ID) {
@@ -104,7 +104,7 @@ namespace Engine {
     void Instanced_mesh::update_instance(float *data,glm::vec3 position, float radius, uint32_t instance) {
         this->m_instance_buffer_data->set_sub_data(data, this->m_ID_pointers.offset(instance) * this->m_instance_buffer_data->get_layout().get_stride(), this->m_instance_buffer_data->get_layout().get_stride());
         float sphere[] = {position.x, position.y, position.z, radius};
-        this->m_instance_bounding_spheres->set_sub_data(sphere, instance * m_instance_bounding_spheres->get_layout().get_stride(), m_instance_bounding_spheres->get_layout().get_stride());
+        //this->m_instance_bounding_spheres->set_sub_data(sphere, instance * m_instance_bounding_spheres->get_layout().get_stride(), m_instance_bounding_spheres->get_layout().get_stride());
     }
 
     Transform::Transform(glm::vec3 position) {
