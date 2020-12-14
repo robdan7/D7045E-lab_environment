@@ -252,7 +252,119 @@ int main(int argc, char** argv) {
     auto shader = Engine::Shader::create_shader({vertex, triangle_frag_shader});
     shader->compile();
 
+    Global_uniforms uniforms;
+    /// -------- GUI --------
+    auto gui = Engine::ImGui_layer(window);
+    auto selection_panel = std::make_shared<Selector_panel>();
+    gui.push_panel(selection_panel);
+    Singleton_state singleton;
 
+
+    auto triangle_shader = Engine::Shader::create_shader({vertex, triangle_frag_shader});
+    triangle_shader->compile();
+    /// The uniform bindings must be done manually :(
+    GLuint index= glGetUniformBlockIndex(triangle_shader->get_ID(), "Uniform_block");
+    glUniformBlockBinding(triangle_shader->get_ID(), index, 0);
+
+    /// Special shader for points and lines.
+    auto dot_shader = Engine::Shader::create_shader({vertex,triangle_frag_shader});
+    dot_shader->compile();
+
+    /// -------- Buffers --------
+
+    /// VBO for all points.
+    auto point_buffer = Engine::Vertex_buffer::Create(nullptr, 0,
+                                                      Engine::Raw_buffer::Access_frequency::DYNAMIC,
+                                                      Engine::Raw_buffer::Access_type::DRAW);
+    /// Set the layout of the vertex buffer. This tells the VAO what the vertex attributes should be.
+    Engine::Buffer_layout point_layout = {{Engine::Shader_data::Float2, "position"}};
+    point_buffer->set_layout(point_layout);
+
+    /// VBO for filled triangles.
+    auto triangle_buffer= Engine::Vertex_buffer::Create(nullptr, 0,
+                                                        Engine::Raw_buffer::Access_frequency::DYNAMIC,
+                                                        Engine::Raw_buffer::Access_type::DRAW);
+
+    auto convex_hull_buffer = Engine::Index_buffer::Create(nullptr,0,Engine::Raw_buffer::Access_frequency::DYNAMIC);
+
+    /// Every triangle will also have a color for each vertex.
+    Engine::Buffer_layout triangulation_layout = {{Engine::Shader_data::Float2, "position"}, {Engine::Shader_data::Float3, "color"}};
+    triangle_buffer->set_layout(triangulation_layout);
+
+    /// This creates the actual triangles.
+    if (selection_panel->is_random()) {
+        reset_random_triangles(15, singleton, point_buffer, triangle_buffer,convex_hull_buffer);
+    } else {
+        reset_fixed_triangles(singleton, point_buffer, triangle_buffer,convex_hull_buffer);
+    }
+
+    /// -------- VAOs --------
+    auto point_VAO = Engine::Vertex_array::Create();
+    point_VAO->add_vertex_buffer(point_buffer);
+
+    auto trianglulation_VAO = Engine::Vertex_array::Create();
+    trianglulation_VAO->add_vertex_buffer(triangle_buffer);
+
+    auto convex_hull_VAO = Engine::Vertex_array::Create();
+    convex_hull_VAO->set_index_buffer(convex_hull_buffer);
+    convex_hull_VAO->add_vertex_buffer(point_buffer);
+
+    /// -------- Mouse listener that sets the triangle color --------
+    std::shared_ptr<Lab2::Triangle> clicked_triangle = nullptr;
+    /// This is a generic, single threaded, event listener/actor that will receive events from the application window.
+    Engine::Event_actor_obj<Engine::Mouse_button_Event> mouse_listener;
+    mouse_listener.set_callback_func<Engine::Mouse_button_Event>([window ,&singleton, &clicked_triangle,triangle_buffer](Engine::Mouse_button_Event event){
+        if (event.action) {
+            auto mouse_pos = window->get_cursor_pos();
+            /// Convert screen mouse position to "world" position.
+            float x = (float)std::get<0>(mouse_pos)/window->get_width()*2.0f-1.0f;
+            float y = -((float)std::get<1>(mouse_pos)/window->get_height()*2.0f-1.0f);
+            Lab2::Vertex v{x,y};
+
+            if (clicked_triangle) {
+                for (const auto& tri : singleton.clicked_triangles) {
+                    /// This code is repeated. I know
+                    float base_offset = tri->triangle_ID*5*3+2;
+                    singleton.triangle_array[base_offset] = singleton.triangle_array[base_offset] - 0.4f;
+                    singleton.triangle_array[base_offset + 1] = singleton.triangle_array[base_offset + 1] - 0.5f;
+                    singleton.triangle_array[base_offset + 2] = singleton.triangle_array[base_offset + 2] - 0.5f;
+
+                    singleton.triangle_array[base_offset + 5] = singleton.triangle_array[base_offset + 5] - 0.5f;
+                    singleton.triangle_array[base_offset + 6] = singleton.triangle_array[base_offset + 6] - 0.5f;
+                    singleton.triangle_array[base_offset + 7] = singleton.triangle_array[base_offset + 7] - 0.5f;
+
+                    singleton.triangle_array[base_offset + 10] = singleton.triangle_array[base_offset + 10] - 0.5f;
+                    singleton.triangle_array[base_offset + 11] = singleton.triangle_array[base_offset + 11] - 0.5f;
+                    singleton.triangle_array[base_offset + 12] = singleton.triangle_array[base_offset + 12] - 0.5f;
+
+                    triangle_buffer->set_sub_data(&singleton.triangle_array[base_offset], base_offset * sizeof(float), 13 * sizeof(float));
+                }
+
+            }
+            singleton.clicked_triangles.clear();
+            if (clicked_triangle = singleton.search_tree->search(v)) {   /// This is not a typo. Don't put == here
+                //std::cout << "You clicked on " << std::to_string(clicked_triangle->triangle_ID) << std::endl;
+                Lab2::color_circle(std::shared_ptr<Lab2::Triangle>(clicked_triangle),singleton.clicked_triangles);
+                singleton.clicked_triangles.push_back(clicked_triangle);
+                for (const auto& tri : singleton.clicked_triangles) {
+                    /// This code is repeated. I know
+                    float base_offset = tri->triangle_ID*5*3+2;
+                    singleton.triangle_array[base_offset] = singleton.triangle_array[base_offset] + 0.4f;
+                    singleton.triangle_array[base_offset + 1] = singleton.triangle_array[base_offset + 1] + 0.5f;
+                    singleton.triangle_array[base_offset + 2] = singleton.triangle_array[base_offset + 2] + 0.5f;
+
+                    singleton.triangle_array[base_offset + 5] = singleton.triangle_array[base_offset + 5] + 0.5f;
+                    singleton.triangle_array[base_offset + 6] = singleton.triangle_array[base_offset + 6] + 0.5f;
+                    singleton.triangle_array[base_offset + 7] = singleton.triangle_array[base_offset + 7] + 0.5f;
+
+                    singleton.triangle_array[base_offset + 10] = singleton.triangle_array[base_offset + 10] + 0.5f;
+                    singleton.triangle_array[base_offset + 11] = singleton.triangle_array[base_offset + 11] + 0.5f;
+                    singleton.triangle_array[base_offset + 12] = singleton.triangle_array[base_offset + 12] + 0.5f;
+                    triangle_buffer->set_sub_data(&singleton.triangle_array[base_offset], base_offset * sizeof(float), 13 * sizeof(float));
+                }
+            }
+        }
+    });
     /// Misc GL and engine commands.
     Engine::Render::Render_command::set_clear_color({0.6,0.6,0.75,1});
     float vertices[] = {
