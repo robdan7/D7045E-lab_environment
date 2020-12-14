@@ -223,7 +223,7 @@ namespace Engine {
 
         template<typename Event, typename... Args>
         static void post(Args&&... args) {
-            if (event_containers.contains(typeid(Event)) && static_cast<Event_list<Event>*>(event_containers.at(typeid(Event)))->has_listeners()) {
+            if (event_containers.count(typeid(Event))>0 && static_cast<Event_list<Event>*>(event_containers.at(typeid(Event)))->has_listeners()) {
                 //CORE_LOG_TRACE("Posting event of type {0}", typeid(Event).name());
                 static_cast<Event_list<Event>*>(event_containers.at(typeid(Event)))->template send_event<Args...>(std::forward<Args>(args)...);
             } else {
