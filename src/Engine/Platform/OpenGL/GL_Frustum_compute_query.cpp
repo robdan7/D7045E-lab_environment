@@ -111,11 +111,7 @@ namespace Engine {
 
             in Vertex_data {
                 vec4 position;
-//                float radius;
             } vertex_data[];
-
-//            layout(stream = 1) out vec4 stream_position;
-
         )";
 
         geom_data += "in Instance_data {\n";
