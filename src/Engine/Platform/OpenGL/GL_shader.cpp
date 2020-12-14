@@ -47,11 +47,10 @@ namespace Engine {
             // The maxLength includes the NULL character
             std::vector<GLchar> infoLog(maxLength);
             glGetProgramInfoLog(m_program, maxLength, &maxLength, &infoLog[0]);
+            std::cout << "GL Shader program linking failed: Error message:\n" << (char*)&infoLog[0] << std::endl;
 
             // We don't need the program anymore.
             glDeleteProgram(m_program);
-
-            // TODO Fix proper error callback. The previous version didn't work.
 //            CORE_LOG_ERROR("Shader program {0} compilation failed! \n", m_program);
             std::ostringstream out;
             for (GLchar in : infoLog) {
@@ -60,35 +59,6 @@ namespace Engine {
             std::string s(out.str());
             //CORE_LOG_ERROR("Platform::GL_shader:: Could not link shader program. Error code:\n{0}", s);
         }
-//        } else {
-//
-//
-//            GLint length = 0;
-//            glGetProgramiv(this->m_program, GL_PROGRAM_BINARY_LENGTH, &length);
-//            char data[length];
-//            GLenum format = 0;
-//            glGetProgramBinary(this->m_program, length, NULL, &format, data);
-////            CORE_LOG_INFO("Binary format: {0}", format);
-//
-//
-//            std::ofstream out("shader_" + std::to_string(this->m_program) + ".bin", std::ios::binary);
-//            out.write(data, length);
-//            out.close();
-//            CORE_LOG_INFO("Writing shader {0} to file, bytes: {1}, {2}", "shader_" + std::to_string(this->m_program) + ".bin", length, sizeof(data));
-////
-//            std::ifstream inputStream("shader_" + std::to_string(this->m_program) + ".bin", std::ios::binary);
-//////            std::ifstream input_stream(fName, std::ios::binary);
-//            std::istreambuf_iterator<char> start_it(inputStream), end_it;
-//            std::vector<char> buffer(start_it, end_it);
-//        inputStream.close();
-//
-//
-////            CORE_LOG_INFO("Wrote {0} bytes to char vector", buffer.size());
-//            glProgramBinary(this->m_program, format, buffer.data(), buffer.size() );
-////            GL_shader(buffer.data());
-////            test(this->m_program, buffer);
-//
-//        }
     }
 
     void GL_shader::attach_shader_stage(std::shared_ptr<Shader_stage> shader_stage) {
@@ -108,7 +78,7 @@ namespace Engine {
             // The maxLength includes the NULL character
             std::vector<GLchar> infoLog(maxLength);
             glGetProgramInfoLog(m_program, maxLength, &maxLength, &infoLog[0]);
-
+            std::cout << "GL Shader program linking failed: Error message:\n" << (char*)&infoLog[0] << std::endl;
             // We don't need the program anymore.
             glDeleteProgram(m_program);
 
@@ -143,6 +113,7 @@ namespace Engine {
             // We don't need the shader anymore.
             glDeleteShader(shader_ID);
 
+            std::cout << "Shader compilation failed: Error message:\n" << (char*)&infoLog[0] << std::endl;
             //CORE_LOG_ERROR("{0} shader compilation failed! \n    Info: {1}", shader_type, infoLog.data());
             this->shader = 0;
         }
