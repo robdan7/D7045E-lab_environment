@@ -224,24 +224,16 @@ void reset_fixed_triangles(Singleton_state& state,
 
 int main(int argc, char** argv) {
     auto window = std::shared_ptr<Engine::Window>(Engine::Window::create_window());
-    Global_uniforms uniforms;
-    /// -------- GUI --------
-    auto gui = Engine::ImGui_layer(window);
-    auto selection_panel = std::make_shared<Selector_panel>();
-    gui.push_panel(selection_panel);
-    Singleton_state singleton;
+    std::cout << "OpenGL driver version: "<< glGetString(GL_VERSION) << std::endl;
 
     /// -------- Shaders --------
     auto vertex = Engine::Shader::create_shader_stage(
             GL_VERTEX_SHADER,
             R"(
-            #version 450 core
+            #version 330 core
             in vec4 position;
-            in vec3 color;
-            out vec3 vs_color;
 
             void main() {
-                vs_color = color;
                 gl_Position = position;
             }
 
@@ -249,189 +241,40 @@ int main(int argc, char** argv) {
     auto triangle_frag_shader = Engine::Shader::create_shader_stage(
             GL_FRAGMENT_SHADER,
             R"(
-            #version 450 core
-            in vec3 vs_color;
+            #version 330 core
             out vec4 color;
-            uniform Uniform_block {
-                mat4 view_matrix;
-                mat4 transform_matrix;
-                vec4 color;
-            } my_block;
+
             void main() {
-                color = vec4(vs_color,1);
+                color = vec4(1,0,0,1);
             }
             )");
 
-    auto dot_frag_shader = Engine::Shader::create_shader_stage(
-            GL_FRAGMENT_SHADER,
-            R"(
-            #version 450 core
-            out vec4 color;
-            uniform Uniform_block {
-                vec4 color;
-            } my_block;
-
-            void main() {
-                color = my_block.color;
-            }
-            )");
-
-    auto triangle_shader = Engine::Shader::create_shader({vertex, triangle_frag_shader});
-    triangle_shader->compile();
-    /// The uniform bindings must be done manually :(
-    GLuint index= glGetUniformBlockIndex(triangle_shader->get_ID(), "Uniform_block");
-    glUniformBlockBinding(triangle_shader->get_ID(), index, 0);
-
-    /// Special shader for points and lines.
-    auto dot_shader = Engine::Shader::create_shader({vertex,dot_frag_shader});
-    dot_shader->compile();
-
-    /// -------- Buffers --------
-
-    /// VBO for all points.
-    auto point_buffer = Engine::Vertex_buffer::Create(nullptr, 0,
-                                                      Engine::Raw_buffer::Access_frequency::DYNAMIC,
-                                                      Engine::Raw_buffer::Access_type::DRAW);
-    /// Set the layout of the vertex buffer. This tells the VAO what the vertex attributes should be.
-    Engine::Buffer_layout point_layout = {{Engine::Shader_data::Float2, "position"}};
-    point_buffer->set_layout(point_layout);
-
-    /// VBO for filled triangles.
-    auto triangle_buffer= Engine::Vertex_buffer::Create(nullptr, 0,
-                                                        Engine::Raw_buffer::Access_frequency::DYNAMIC,
-                                                        Engine::Raw_buffer::Access_type::DRAW);
-
-    auto convex_hull_buffer = Engine::Index_buffer::Create(nullptr,0,Engine::Raw_buffer::Access_frequency::DYNAMIC);
-
-    /// Every triangle will also have a color for each vertex.
-    Engine::Buffer_layout triangulation_layout = {{Engine::Shader_data::Float2, "position"}, {Engine::Shader_data::Float3, "color"}};
-    triangle_buffer->set_layout(triangulation_layout);
-
-    /// This creates the actual triangles.
-    if (selection_panel->is_random()) {
-        reset_random_triangles(15, singleton, point_buffer, triangle_buffer,convex_hull_buffer);
-    } else {
-        reset_fixed_triangles(singleton, point_buffer, triangle_buffer,convex_hull_buffer);
-    }
-
-    /// -------- VAOs --------
-    auto point_VAO = Engine::Vertex_array::Create();
-    point_VAO->add_vertex_buffer(point_buffer);
-
-    auto trianglulation_VAO = Engine::Vertex_array::Create();
-    trianglulation_VAO->add_vertex_buffer(triangle_buffer);
-
-    auto convex_hull_VAO = Engine::Vertex_array::Create();
-    convex_hull_VAO->set_index_buffer(convex_hull_buffer);
-    convex_hull_VAO->add_vertex_buffer(point_buffer);
-
-    /// -------- Mouse listener that sets the triangle color --------
-    std::shared_ptr<Lab2::Triangle> clicked_triangle = nullptr;
-    /// This is a generic, single threaded, event listener/actor that will receive events from the application window.
-    Engine::Event_actor_obj<Engine::Mouse_button_Event> mouse_listener;
-    mouse_listener.set_callback_func<Engine::Mouse_button_Event>([window ,&singleton, &clicked_triangle,triangle_buffer](Engine::Mouse_button_Event event){
-        if (event.action) {
-            auto mouse_pos = window->get_cursor_pos();
-            /// Convert screen mouse position to "world" position.
-            float x = (float)std::get<0>(mouse_pos)/window->get_width()*2.0f-1.0f;
-            float y = -((float)std::get<1>(mouse_pos)/window->get_height()*2.0f-1.0f);
-            Lab2::Vertex v{x,y};
-
-            if (clicked_triangle) {
-                for (const auto& tri : singleton.clicked_triangles) {
-                    /// This code is repeated. I know
-                    float base_offset = tri->triangle_ID*5*3+2;
-                    singleton.triangle_array[base_offset] = singleton.triangle_array[base_offset] - 0.4f;
-                    singleton.triangle_array[base_offset + 1] = singleton.triangle_array[base_offset + 1] - 0.5f;
-                    singleton.triangle_array[base_offset + 2] = singleton.triangle_array[base_offset + 2] - 0.5f;
-
-                    singleton.triangle_array[base_offset + 5] = singleton.triangle_array[base_offset + 5] - 0.5f;
-                    singleton.triangle_array[base_offset + 6] = singleton.triangle_array[base_offset + 6] - 0.5f;
-                    singleton.triangle_array[base_offset + 7] = singleton.triangle_array[base_offset + 7] - 0.5f;
-
-                    singleton.triangle_array[base_offset + 10] = singleton.triangle_array[base_offset + 10] - 0.5f;
-                    singleton.triangle_array[base_offset + 11] = singleton.triangle_array[base_offset + 11] - 0.5f;
-                    singleton.triangle_array[base_offset + 12] = singleton.triangle_array[base_offset + 12] - 0.5f;
-
-                    triangle_buffer->set_sub_data(&singleton.triangle_array[base_offset], base_offset * sizeof(float), 13 * sizeof(float));
-                }
-
-            }
-            singleton.clicked_triangles.clear();
-            if (clicked_triangle = singleton.search_tree->search(v)) {   /// This is not a typo. Don't put == here
-                //std::cout << "You clicked on " << std::to_string(clicked_triangle->triangle_ID) << std::endl;
-                Lab2::color_circle(std::shared_ptr<Lab2::Triangle>(clicked_triangle),singleton.clicked_triangles);
-                singleton.clicked_triangles.push_back(clicked_triangle);
-                for (const auto& tri : singleton.clicked_triangles) {
-                    /// This code is repeated. I know
-                    float base_offset = tri->triangle_ID*5*3+2;
-                    singleton.triangle_array[base_offset] = singleton.triangle_array[base_offset] + 0.4f;
-                    singleton.triangle_array[base_offset + 1] = singleton.triangle_array[base_offset + 1] + 0.5f;
-                    singleton.triangle_array[base_offset + 2] = singleton.triangle_array[base_offset + 2] + 0.5f;
-
-                    singleton.triangle_array[base_offset + 5] = singleton.triangle_array[base_offset + 5] + 0.5f;
-                    singleton.triangle_array[base_offset + 6] = singleton.triangle_array[base_offset + 6] + 0.5f;
-                    singleton.triangle_array[base_offset + 7] = singleton.triangle_array[base_offset + 7] + 0.5f;
-
-                    singleton.triangle_array[base_offset + 10] = singleton.triangle_array[base_offset + 10] + 0.5f;
-                    singleton.triangle_array[base_offset + 11] = singleton.triangle_array[base_offset + 11] + 0.5f;
-                    singleton.triangle_array[base_offset + 12] = singleton.triangle_array[base_offset + 12] + 0.5f;
-                    triangle_buffer->set_sub_data(&singleton.triangle_array[base_offset], base_offset * sizeof(float), 13 * sizeof(float));
-                }
-            }
-        }
-    });
+    auto shader = Engine::Shader::create_shader({vertex, triangle_frag_shader});
+    shader->compile();
 
 
     /// Misc GL and engine commands.
-    glLineWidth(2.5f);
-    glPointSize(10);
-    glEnable(GL_POINT_SMOOTH);
     Engine::Render::Render_command::set_clear_color({0.6,0.6,0.75,1});
+    float vertices[] = {
+            0,0,
+            0.5f,0,
+            0.5f,0.5f
+    };
+    GLuint ID;
+    glCreateBuffers(1, &ID);
+    glBindBuffer(GL_ARRAY_BUFFER, (GLuint)(ID));
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices,GL_STATIC_DRAW);
+    //glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    auto black = glm::vec4(0,0,0,1);
-    auto white = glm::vec4 (1,1,1,1);
-    bool triangle_state = selection_panel->is_random();
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,0,0);
+
+    shader->bind();
     while (!window->should_close()) {
         Engine::Render::Render_command::clear();
-        mouse_listener.on_update();
 
-        triangle_shader->bind();
-        trianglulation_VAO->bind();
-        /// Render filled triangles
-        glDrawArrays(GL_TRIANGLES, 0, triangle_buffer->get_size()/sizeof(singleton.triangle_array[0]));
+        glDrawArrays(GL_TRIANGLES,0,3);
 
-        dot_shader->bind();
-        uniforms.color.m_data = black;
-        uniforms.update_color();
-        /// Render triangle outlines
-        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-        glDrawArrays(GL_TRIANGLES, 0, triangle_buffer->get_size()/sizeof(singleton.triangle_array[0]));
-        glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-
-        point_VAO->bind();
-        /// Render points
-        glDrawArrays(GL_POINTS, 0, singleton.vertex_array.size());
-        convex_hull_VAO->bind();
-        uniforms.color.m_data = white;
-        uniforms.update_color();
-        glDrawElements(GL_POINTS,singleton.hull_indices.size(),GL_UNSIGNED_INT,nullptr);
-        convex_hull_VAO->unbind();
-        dot_shader->unbind();
-
-        gui.on_update();
-        /// Clear all triangles and start over if the user pressed a button
-        {
-            bool temp_state = selection_panel->is_random();
-            if (temp_state != triangle_state) {
-                triangle_state = temp_state;
-                if(triangle_state) {
-                    reset_random_triangles(15, singleton, point_buffer, triangle_buffer,convex_hull_buffer);
-                } else {
-                    reset_fixed_triangles(singleton, point_buffer, triangle_buffer,convex_hull_buffer);
-                }
-            }
-        }
         window->on_update();
     }
     return 0;
