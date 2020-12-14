@@ -96,10 +96,10 @@ int main(int argc, char** argv) {
                 mat4 projection_matrix;
             } my_block;
 
-            layout(location = 1) uniform vec4 ambient_color;
+            layout(location = 1) uniform vec4 diffuse_color;
 
             void main() {
-                vs_color = ambient_color*max(0.1,dot(normal, normalize(vec3(0.3,0.7,0.2))));
+                vs_color = diffuse_color*max(0.1,dot(normal, normalize(vec3(0.3,0.7,0.2))));
                 vec4 in_position = vec4(position,1);
                 gl_Position = my_block.projection_matrix * my_block.view_matrix*transform*in_position;
             }
@@ -133,7 +133,6 @@ int main(int argc, char** argv) {
 
     /// -------- Camera --------
     float aspect_ratio = ((float)window->get_width()/window->get_height());
-    //auto camera = Engine::Orthographic_camera(-aspect_ratio,aspect_ratio,1,-1,0,1);
     auto camera = Engine::Perspective_camera(0.01f,1000.0f,panel->fov(),aspect_ratio);
     camera.set_position_axis_aligned({0.0f,0.0f,30.0f});
     camera.look_at({0.0f,0.0f,0.0f});
@@ -223,7 +222,7 @@ int main(int argc, char** argv) {
     }
 
     auto mat = glm::mat4(1);
-    auto instance = Lab3::GraphicsNode(pink_model,mat);
+    auto instance = Lab3::GraphicsNode(pink_model,mat); /// Pink cube graphics node
     pink_model->on_update();
     green_model.on_update();
 

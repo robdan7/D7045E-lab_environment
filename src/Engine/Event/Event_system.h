@@ -195,16 +195,6 @@ namespace Engine {
         }
 
         /**
-        * Let an event actor subscribe to all of its events.
-        * @tparam Events
-        * @param actor
-        */
-//        template<typename... Events>
-//        static void subscribe_to(Event_actor<Events...> *actor) {
-//            (set_container<Events>(),...);
-//            (static_cast<Event_list<Events>*>(event_containers.at(typeid(Events)))->subscribe(static_cast<I_Event_actor*>(actor)), ...);
-//        }
-        /**
          * Subscribe to one type of event.
          * @tparam Event
          * @tparam Callback - The notify function
@@ -233,12 +223,6 @@ namespace Engine {
 
         static void Init();
 
-//        template<typename... Events>
-//        static void unsubscribe(Event_actor<Events...>* actor) {
-//            (static_cast<Event_list<Events>*>(event_containers.at(typeid(Events)))->unsubscribe(
-//                    static_cast<I_Event_actor*>(actor)), ...);
-//        }
-        // TODO Implement unsubscribe to one event type.
     private:
 
 
