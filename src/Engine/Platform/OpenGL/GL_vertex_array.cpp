@@ -1,5 +1,6 @@
 #include "GL_vertex_array.h"
 #include <Platform/OpenGL/OpenGL.h>
+#define BUFFER_OFFSET(i) ((char *)NULL + (i))
 #include <algorithm>
 namespace Engine {
     GL_vertex_array::GL_vertex_array() {
@@ -40,7 +41,7 @@ namespace Engine {
                         GL_FLOAT,
                                       element.m_normalized ? GL_TRUE : GL_FALSE,
                         vertex_buffer->get_layout().get_stride(),
-                        (const void*)(element.m_offset + element.m_base_component_size * i)
+                                      BUFFER_OFFSET(element.m_offset + element.m_base_component_size * i)
                         );
                 glVertexAttribDivisor(m_current_index+i, instance_divisor);
             }
