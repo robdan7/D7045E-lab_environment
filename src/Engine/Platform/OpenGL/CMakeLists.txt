@@ -32,7 +32,9 @@ add_library(OpenGL_renderer STATIC
         GL_buffer.cpp
         GL_vertex_array.cpp
         GL_renderer_API.cpp
-        GL_Frustum_compute_query.cpp)
+        GL_Frustum_compute_query.cpp
+        GL_Texture2D.cpp
+        GL_Framebuffer.cpp)
 target_link_libraries(OpenGL_renderer PUBLIC Renderer PRIVATE OpenGL_glew glm_static)
 target_include_directories(OpenGL_renderer PRIVATE ${ENGINE_HEADERS})
 target_include_directories(OpenGL_renderer PUBLIC ${PROJECT_SOURCE_DIR}/include/glm)

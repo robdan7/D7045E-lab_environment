@@ -44,22 +44,31 @@ namespace Engine {
 
     struct Float_data : public I_data<float>{
         Float_data(uint32_t offset, const char* name, bool normalized = false) : I_data(offset, Engine::Shader_data::Float, name, normalized){}
+        uint32_t stride() override {
+            return sizeof(glm::vec2);
+        }
     };
 
-    struct Float2_data : public I_data<glm::vec2>{
+    struct Float2_data : public I_data<glm::fvec2>{
         Float2_data(uint32_t offset, const char* name, bool normalized = false) : I_data(offset, Engine::Shader_data::Float, name, normalized){}
     };
 
-    struct Float3_data : public I_data<glm::vec3>{
+    struct Float3_data : public I_data<glm::fvec3>{
         Float3_data(uint32_t offset, const char* name, bool normalized = false) : I_data(offset, Engine::Shader_data::Float, name, normalized){}
+        uint32_t stride() override {
+            return sizeof(glm::vec4);
+        }
     };
 
-    struct Float4_data : public I_data<glm::vec4>{
+    struct Float4_data : public I_data<glm::fvec4>{
         Float4_data(uint32_t offset, const char* name, bool normalized = false) : I_data(offset, Engine::Shader_data::Float, name, normalized){}
     };
 
     struct Int_data : public I_data<int> {
         Int_data(uint32_t offset, const char* name, bool normalized = false) : I_data(offset, Engine::Shader_data::Int, name, normalized){}
+        uint32_t stride() override {
+            return sizeof(glm::ivec2);
+        }
     };
 
     struct Int2_data : public I_data<glm::ivec2> {
@@ -68,6 +77,10 @@ namespace Engine {
 
     struct Int3_data : public I_data<glm::ivec3> {
         Int3_data(uint32_t offset, const char* name, bool normalized = false) : I_data(offset, Engine::Shader_data::Int, name, normalized){}
+
+        uint32_t stride() override {
+            return sizeof(glm::ivec4);
+        }
     };
 
     struct Int4_data : public I_data<glm::ivec4> {
@@ -96,8 +109,8 @@ namespace Engine {
     protected:
         uint32_t size = 0;
         template<typename Arg>
-        Arg set_arg(const char* name) {
-            Arg a = Arg(size,name,false);
+        Arg set_arg(const char* name, bool normalized = false) {
+            Arg a = Arg(size,name,normalized);
             this->size += a.stride();
             return std::move(a);
         }
@@ -112,7 +125,7 @@ namespace Engine {
 Name() : I_shader_constant_container() {this->m_buffer = ::Engine::Constant_buffer::Create(nullptr, this->get_size(), ::Engine::Vertex_buffer::Access_frequency::DYNAMIC, ::Engine::Vertex_buffer::Access_type::DRAW);} \
 public: std::shared_ptr<Engine::Constant_buffer> m_buffer;\
 public:
-#define SET_SHADER_CONST(type, name) type name = this->set_arg<type>(#name); \
+#define SET_SHADER_CONST(type, name, normalized) type name = this->set_arg<type>(#name, normalized); \
     void update_##name() {this->m_buffer->set_sub_data((void*)this->name.get_data(), this->name.get_offset(),this->name.stride());}
 
 #define END_SHADER_CONST(Name) };

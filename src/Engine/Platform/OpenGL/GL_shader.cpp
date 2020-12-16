@@ -51,7 +51,7 @@ namespace Engine {
             // We don't need the program anymore.
             glDeleteProgram(m_program);
 
-            // TODO Fix proper error callback. The previous version didn't work.
+            std::cout << "Shader program could not be linked:\n" << (char*)&infoLog[0] << std::endl;
 //            CORE_LOG_ERROR("Shader program {0} compilation failed! \n", m_program);
             std::ostringstream out;
             for (GLchar in : infoLog) {
@@ -79,7 +79,7 @@ namespace Engine {
             // The maxLength includes the NULL character
             std::vector<GLchar> infoLog(maxLength);
             glGetProgramInfoLog(m_program, maxLength, &maxLength, &infoLog[0]);
-
+            std::cout << "Shader program could not be linked:\n" << (char*)&infoLog[0] << std::endl;
             // We don't need the program anymore.
             glDeleteProgram(m_program);
 
@@ -110,7 +110,7 @@ namespace Engine {
             // The maxLength includes the NULL character
             std::vector<GLchar> infoLog(maxLength);
             glGetShaderInfoLog(shader_ID, maxLength, &maxLength, &infoLog[0]);
-
+            std::cout << "Shader stage did not compile:\n" << (char*)&infoLog[0] << std::endl;
             // We don't need the shader anymore.
             glDeleteShader(shader_ID);
 
