@@ -10,7 +10,7 @@ namespace Engine {
         void disable() {
             this->m_shader->unbind();
         }
-    private:
+    protected:
         std::shared_ptr<Shader> m_shader;
     };
 }

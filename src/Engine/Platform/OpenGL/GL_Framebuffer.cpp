@@ -2,24 +2,38 @@
 #include <Renderer/Texture2D.h>
 namespace Engine {
 
-    void GL_Framebuffer::bind() {
+    void GL_Framebuffer::bind_write() {
         glBindFramebuffer(GL_FRAMEBUFFER, this->m_ID);
     }
 
     void GL_Framebuffer::unbind() {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        for (int i = 0; i < this->p_textures.size(); i++) {
+            glActiveTexture(GL_TEXTURE0+i);
+            this->p_textures[i]->unbind();
+        }
     }
 
 
     void GL_Framebuffer::set_depth_texture(std::shared_ptr<Texture2D> texture) {
-        this->bind();
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, texture->get_ID());
-        this->unbind();
+        glBindFramebuffer(GL_FRAMEBUFFER, this->m_ID);
+
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, texture->get_ID(), 0);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        this->p_textures.push_back(texture);
+        //this->m_color_textures++;
+
     }
 
-    void GL_Framebuffer::add_color_texture(std::shared_ptr<Texture2D> texture) {
-        this->bind();
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+(this->m_color_textures++), GL_TEXTURE_2D, texture->get_ID(), 0);
+    void GL_Framebuffer::add_write_color_texture(std::shared_ptr<Texture2D> texture) {
+        this->bind_write();
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+(this->m_color_textures), GL_TEXTURE_2D, texture->get_ID(), 0);
+        this->m_draw_buffers.push_back(GL_COLOR_ATTACHMENT0+this->m_color_textures);
+        this->p_textures.push_back(texture);
+        this->m_color_textures++;
+        glDrawBuffers(this->m_draw_buffers.size(), &this->m_draw_buffers[0]);
+
         this->unbind();
     }
 
@@ -29,5 +43,18 @@ namespace Engine {
 
     GL_Framebuffer::GL_Framebuffer() {
         glCreateFramebuffers(1,&this->m_ID);
+    }
+
+    void GL_Framebuffer::bind_read() {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        for (int i = 0; i < this->p_textures.size(); i++) {
+            glActiveTexture(GL_TEXTURE0+i);
+            this->p_textures[i]->bind();
+            glUniform1i(i,i);   /// Quick fix for sampler bindings. Not entirely sure if this belongs in the framebuffer :/
+        }
+    }
+
+    void GL_Framebuffer::add_read_color_texture(std::shared_ptr<Texture2D> texture) {
+        this->p_textures.push_back(texture);
     }
 }

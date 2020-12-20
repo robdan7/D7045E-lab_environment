@@ -1,5 +1,9 @@
 #define API_OPENGL
 #include <Engine.h>
+#include "Monochrome_material.h"
+#include "Scene.h"
+#include "GraphicsNode.h"
+#include "Shadowmap_material.h"
 
 #define PI (atan(1)*4)
 BEGIN_SHADER_CONST(Global_uniforms)
@@ -10,6 +14,7 @@ BEGIN_SHADER_CONST(Global_uniforms)
     SET_SHADER_CONST(Engine::Float3_data, diffuse,false)
     SET_SHADER_CONST(Engine::Float3_data, specular,false)
     SET_SHADER_CONST(Engine::Float3_data, sun_position,true)
+    SET_SHADER_CONST(Engine::Matrix4_data, shadow_camera, false);
 END_SHADER_CONST(Global_uniforms)
 
 class Settings_panel : public Engine::ImGui_panel {
@@ -27,7 +32,7 @@ public:
         ImGui::Text(text.c_str());
         ImGui::SliderFloat("Camera yaw", &this->m_yaw, -PI, PI);
         ImGui::SliderFloat("Camera pitch",&this->m_pitch, -PI/2+0.01,PI/2-0.01);
-        ImGui::SliderFloat("Camera center offset", &this->m_distance, 2,10);
+        ImGui::SliderFloat("Camera center offset", &this->m_distance, 2,20);
         ImGui::SliderFloat("Camera FOV", &this->m_fov, 10, 90);
         ImGui::End();
     }
@@ -51,7 +56,7 @@ public:
 private:
     float m_yaw = 0;
     float m_pitch = -0.5;
-    float m_distance = 3;
+    float m_distance = 15;
     int objects = 0;
     float m_fov = 45;
 };
@@ -361,9 +366,17 @@ int main(int argc, char** argv) {
             #version 450 core
             layout(location = 0) in vec3 position;
             layout(location = 1) in vec3 normal;
+            layout(location = 2) in vec4 instance_color;
+            layout(location = 3) in float specular_power;
+            layout(location = 4) in mat4 transform;
+
+
             //layout(location = 0) out vec4 vs_color;
             layout(location = 0) out vec3 vs_normal;
             layout(location = 1) out vec3 vs_position;
+            layout(location = 2) out vec4 vs_color;
+            layout(location = 3) out float vs_spec_power;
+
 
             layout(std140) uniform Uniform_block {
                 mat4 view_matrix;
@@ -373,11 +386,16 @@ int main(int argc, char** argv) {
                 vec3 diffuse;
                 vec3 specular;
                 vec3 sun;
+                mat4 shadow_camera;
             } my_block;
+
             void main() {
-                gl_Position = my_block.projection_matrix * my_block.view_matrix*vec4(position,1);
-                vs_position = position;
+                gl_Position = my_block.projection_matrix * my_block.view_matrix*transform*vec4(position,1);
+                vs_position = (transform*vec4(position,1)).xyz;
                 vs_normal = normal;
+                vs_color = instance_color;
+                vs_spec_power = specular_power;
+
             }
 
             )");
@@ -386,12 +404,16 @@ int main(int argc, char** argv) {
             R"(
             #version 450 core
             layout(location = 0) in vec3 vs_normal;
-            layout(location = 1) in vec3 fragPos;
+            layout(location = 1) in vec3 world_pos;
+            layout(location = 2) in vec4 vs_color;
+            layout(location = 3) in float vs_spec_power;
 
-            out vec4 diffuse_color;
-            out float specular_power;
-            out vec3 fragment_normal;
-            out vec3 world_position;
+
+            layout(location = 0) out vec4 diffuse_color;
+            layout(location = 1) out float specular_power;
+            layout(location = 2) out vec3 fragment_normal;
+            layout(location = 3) out vec3 world_position;
+
 
             layout(std140) uniform Uniform_block {
                 mat4 view_matrix;
@@ -401,14 +423,16 @@ int main(int argc, char** argv) {
                 vec3 diffuse;
                 vec3 specular;
                 vec3 sun;
+                mat4 shadow_camera;
             } my_block;
 
-            void main() {
+            //layout(location = 1) uniform vec4 ambient_color;
 
-                diffuse_color = vec4(vec3(0.6,0.6,0.7),1);
-                specular_power = 1.5;
+            void main() {
+                diffuse_color = vs_color;
+                specular_power = vs_spec_power;
                 fragment_normal = normalize(vs_normal);
-                world_position = fragPos;
+                world_position = world_pos;
             }
             )");
 
@@ -421,9 +445,9 @@ int main(int argc, char** argv) {
 
     uniforms.ambient.m_data = glm::fvec3(0.3,0.3,0.3);
     uniforms.diffuse.m_data = glm::fvec3(0.7,0.7,0.7);
-    uniforms.sun_position.m_data = glm::fvec3 (0,1,0.4f);
+    uniforms.sun_position.m_data = glm::fvec3 (0.3f,1,0.3f);
     uniforms.specular.m_data = glm::fvec3(1.0f,1.0f,1.0f);
-    uniforms.sun_position.m_data /= glm::length(uniforms.sun_position.m_data);
+    //uniforms.sun_position.m_data /= glm::length(uniforms.sun_position.m_data);
     uniforms.update_ambient();
     uniforms.update_diffuse();
     uniforms.update_specular();
@@ -442,18 +466,37 @@ int main(int argc, char** argv) {
     uniforms.update_view_matrix();
     uniforms.update_projection_matrix();
 
-    std::vector<float> vertices;
-    create_prism(vertices,1,1,32);
-    /*
-    vertices.emplace_back(0,0,0);
-    vertices.emplace_back(-1,0,0);
-    vertices.emplace_back(-1,1,0);
-    */
-    auto vbo = Engine::Vertex_buffer::Create(&vertices[0],vertices.size()*sizeof(vertices[0]), Engine::Raw_buffer::Access_frequency::STATIC, Engine::Raw_buffer::Access_type::DRAW);
-    vbo->set_layout(Engine::Buffer_layout{{Engine::Shader_data::Float3, "position"},{Engine::Shader_data::Float3, "normal",true}});
-    auto vao = Engine::Vertex_array::Create();
-    vao->add_vertex_buffer(vbo);
 
+    /// Create raw mesh source
+    Engine::Import_mesh mesh_data;
+    create_pyramid(mesh_data.vertices,1,2,64);
+    mesh_data.materials.emplace_back("",0);
+    mesh_data.materials[0].vertices =mesh_data.vertices.size()/6;
+    mesh_data.draw_type = Engine::Draw_type::STREAM;
+    mesh_data.m_vertex_buffer = Engine::Vertex_buffer::Create(
+            &mesh_data.vertices[0],mesh_data.vertices.size()*sizeof(mesh_data.vertices[0]),
+            Engine::Raw_buffer::Access_frequency::STATIC,
+            Engine::Raw_buffer::Access_type::DRAW);
+
+    /// container for the pink cube
+    auto my_material = std::make_shared<Engine::Material>(shader_program);
+    auto sphere_model = std::shared_ptr<Engine::Instanced_mesh>(new Engine::Instanced_mesh({{Engine::Shader_data::Float4, "color"}, {Engine::Shader_data::Float, "specular_power"}, {Engine::Shader_data::Mat4, "transform"}}, 2));
+    sphere_model->add_LOD(mesh_data, my_material);
+
+    auto transform = glm::translate(glm::mat4(1),glm::vec3(-4.5f,0,-4.5f));
+    auto scene = Lab4::InnerNode(transform);
+    for (float x = 0; x <= 6; x+=2.0f) {
+        for (float z = 0; z <= 9; z+=3.0f) {
+            for (float y = 0; y <= 6; y+=2.0f) {
+                auto mat = glm::translate(glm::mat4(1),glm::vec3(x,y,z));
+                //auto color = glm::vec4(x/9.0f,0.5f+y/9.0f,z/9.0f,1);
+                float data[] = {(x)/6.0f,(y)/6,(z)/9,1,6+x};
+                auto instance = std::make_shared<Lab4::GeometryNode>(sphere_model, &data, mat);
+                scene.add_node(instance);
+            }
+
+        }
+    }
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -463,8 +506,7 @@ int main(int argc, char** argv) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
     Engine::Render::Render_command::set_clear_color({134/255.0f,198/255.0f,247/255.0f,1});
-
-    auto screen_vertex = Engine::Shader::create_shader_stage(GL_VERTEX_SHADER, R"(
+    auto light_vertex = Engine::Shader::create_shader_stage(GL_VERTEX_SHADER, R"(
         #version 450 core
         layout(location = 0) in vec2 position;
         out vec2 tex_coords;
@@ -476,15 +518,17 @@ int main(int argc, char** argv) {
         }
     )");
 
-    auto screen_frag = Engine::Shader::create_shader_stage(GL_FRAGMENT_SHADER, R"(
+    auto light_fragment = Engine::Shader::create_shader_stage(GL_FRAGMENT_SHADER, R"(
         #version 450 core
         layout(location = 0) in vec2 tex_coords;
         layout(location = 0) out vec4 frag_color;
+
 
         layout(location = 0) uniform sampler2D diffuse_texture;
         layout(location = 1) uniform sampler2D specular_texture;
         layout(location = 2) uniform sampler2D normal_texture;
         layout(location = 3) uniform sampler2D frag_coord_texture;
+        layout(location = 4) uniform sampler2D depth_texture;
 
         layout(std140) uniform Uniform_block {
             mat4 view_matrix;
@@ -494,7 +538,10 @@ int main(int argc, char** argv) {
             vec3 diffuse;
             vec3 specular;
             vec3 sun;
+            mat4 shadow_camera;
         } my_block;
+
+        uniform mat4 shadow_view_matrix;
 
 
         vec3 phong(vec3 color,vec3 fragPos, vec3 normal,vec3 viewport, vec3 light, vec3 ambient, vec3 diffuse, vec3 specular) {
@@ -502,36 +549,85 @@ int main(int argc, char** argv) {
                 vec3 reflect = reflect(-light,normal);
                 float spec_power = pow(max(dot(reflect,viewDir),0.0),32);
 
-                vec3 specular_light = specular*spec_power;
-                vec3 diffuse_light = diffuse*dot(normal,light);
 
-                return color*(ambient+diffuse_light+ specular_light);
+                float d = dot(normal,light);
+                if (d > 0) {
+                    vec3 specular_light = specular*spec_power;
+                    vec3 diffuse_light = diffuse*d;
+                    return color*(ambient+diffuse_light+ specular_light);
+                } else {
+                    return color*ambient;
+                }
+
+
             }
 
 
 
         void main() {
-            vec3 diffuse = texture(diffuse_texture, tex_coords);
-            vec3 normal = texture(normal_texture, tex_coords);
+            vec4 diffuse = texture(diffuse_texture, tex_coords);
+            vec3 normal = texture(normal_texture, tex_coords).xyz;
             float specular_power = texture(specular_texture, tex_coords).r;
-            vec3 frag_position = texture(frag_coord_texture, tex_coords).rgb;
+            vec3 frag_position = texture(frag_coord_texture, tex_coords).xyz;
+
+            vec4 shadow_coords = my_block.projection_matrix * my_block.view_matrix*vec4(frag_position,1);
+            float shadow_depth = texture(depth_texture, shadow_coords.xy*0.5+0.5).r;
+
+            float depth = shadow_coords.z*0.5+0.5;
+
+            float my_var = shadow_depth > depth ? 1 : 0;
+
+            vec3 color = phong(diffuse.rgb,frag_position.xyz,normal,my_block.viewport,my_block.sun,my_block.ambient,my_block.diffuse*my_var,specular_power*my_block.specular*my_var);
+/*
+            if (shadow_depth > depth) {
+                frag_color = vec4( color,diffuse.a);
+            } else {
+                frag_color = vec4(1,0,1,diffuse.a);
+            }
+*/
+            frag_color = vec4( color,diffuse.a);
+
+            //frag_color = vec4( shadow_depth-depth,shadow_depth-depth,shadow_depth-depth,diffuse.a);
 
 
-            vec3 color = phong(diffuse,frag_position.xyz,normal,my_block.viewport,my_block.sun,my_block.ambient,my_block.diffuse,my_block.specular);
-            frag_color = vec4(diffuse.rgb,1);
         }
     )");
 
-    auto screen_shader = Engine::Shader::create_shader({screen_vertex, screen_frag});
-    screen_shader->compile();
+    auto light_shader = Engine::Shader::create_shader({light_vertex, light_fragment});
+    light_shader->compile();
+    index= glGetUniformBlockIndex(light_shader->get_ID(), "Uniform_block");
+    glUniformBlockBinding(light_shader->get_ID(), index, 0);
 
-    screen_shader->bind();
+
+
+
+    /*
     glUniform1i(0, 0);
     glUniform1i(1, 1);
     glUniform1i(2, 2);
     glUniform1i(3, 3);
+    */
+    auto shadow_camera = Engine::Orthographic_camera(-12,12,12,-12,-20,20);
+    shadow_camera.set_position_axis_aligned(glm::vec3(0,0,0));
+    //shadow_camera.look_at(-uniforms.sun_position.m_data);
+    shadow_camera.look_at(-uniforms.sun_position.m_data);
+    shadow_camera.on_update();
 
-    float data[] = {
+    light_shader->bind();
+    uniforms.shadow_camera.m_data = shadow_camera.get_view_projection_matrix();
+    uniforms.update_shadow_camera();
+    //index = glGetUniformLocation(light_shader->get_ID(), "shadow_view_matrix");
+    //glUniformMatrix4fv(index,1,GL_FALSE,(float*)&shadow_camera.get_view_projection_matrix()[0][0]);
+
+    //auto shadow_mat = std::make_shared<Lab4::Shadowmap_material>(light_shader, shadow_camera);
+
+    auto shadow_fbo = Engine::FrameBuffer::Create();
+    float shadow_size = 2048;
+    auto shadow_texture = Engine::Texture2D::Create_empty(shadow_size, shadow_size, GL_DEPTH24_STENCIL8,GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8);
+    shadow_fbo->set_depth_texture(shadow_texture);
+
+
+    float light_data[] = {
             -1,-1,
             1,-1,
             -1,1,
@@ -539,44 +635,37 @@ int main(int argc, char** argv) {
             1,1,
             -1,1
     };
-    auto screen_vbo = Engine::Vertex_buffer::Create(&data,sizeof(data),Engine::Raw_buffer::Access_frequency::STATIC,Engine::Raw_buffer::Access_type::DRAW);
-    screen_vbo->set_layout(Engine::Buffer_layout{{Engine::Shader_data::Float2, "position"}});
-    auto screen_vao = Engine::Vertex_array::Create();
-    screen_vao->add_vertex_buffer(screen_vbo);
+    auto light_vbo = Engine::Vertex_buffer::Create(&light_data, sizeof(light_data), Engine::Raw_buffer::Access_frequency::STATIC, Engine::Raw_buffer::Access_type::DRAW);
+    light_vbo->set_layout(Engine::Buffer_layout{{Engine::Shader_data::Float2, "position"}});
+    auto light_vao = Engine::Vertex_array::Create();
+    light_vao->add_vertex_buffer(light_vbo);
+
 
     auto framebuffer = Engine::FrameBuffer::Create();
-    auto diffuse_texture = Engine::Texture2D::Create_empty(window->get_width(), window->get_height(), GL_RGBA, GL_UNSIGNED_BYTE);
-    auto specular_texture = Engine::Texture2D::Create_empty(window->get_width(), window->get_height(),  GL_RED,  GL_FLOAT);
-    auto normal_texture = Engine::Texture2D::Create_empty(window->get_width(),window->get_height(),GL_RGBA, GL_UNSIGNED_BYTE);
-    auto world_pos_texture = Engine::Texture2D::Create_empty(window->get_width(),window->get_height(),GL_RGB, GL_FLOAT);
-    auto depth_texture = Engine::Texture2D::Create_empty(window->get_width(), window->get_height(), GL_DEPTH_COMPONENT, GL_FLOAT);
-    framebuffer->add_color_texture(diffuse_texture);
-    framebuffer->add_color_texture(specular_texture);
-    framebuffer->add_color_texture(normal_texture);
-    framebuffer->add_color_texture(world_pos_texture);
+    auto diffuse_texture = Engine::Texture2D::Create_empty(window->get_width(), window->get_height(), GL_SRGB8_ALPHA8, GL_RGBA, GL_UNSIGNED_BYTE);
+    auto specular_texture = Engine::Texture2D::Create_empty(window->get_width(), window->get_height(), GL_RED, GL_RED,  GL_UNSIGNED_BYTE);
+    auto normal_texture = Engine::Texture2D::Create_empty(window->get_width(),window->get_height(),GL_RGB32F,GL_RGB, GL_FLOAT);
+    auto world_pos_texture = Engine::Texture2D::Create_empty(window->get_width(),window->get_height(),GL_RGB32F,GL_RGB, GL_FLOAT);
+
+
+    auto depth_texture = Engine::Texture2D::Create_empty(window->get_width(), window->get_height(), GL_DEPTH24_STENCIL8,GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8);
+
+    framebuffer->add_write_color_texture(diffuse_texture);
+    framebuffer->add_write_color_texture(specular_texture);
+    framebuffer->add_write_color_texture(normal_texture);
+    framebuffer->add_write_color_texture(world_pos_texture);
+    framebuffer->add_read_color_texture(shadow_texture);
     framebuffer->set_depth_texture(depth_texture);
-    framebuffer->bind();
-    GLenum buffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2,GL_COLOR_ATTACHMENT3};
-    glDrawBuffers(4, buffers);
 
-    glActiveTexture(GL_TEXTURE0);
-    diffuse_texture->bind();
 
-    glActiveTexture(GL_TEXTURE1);
-    specular_texture->bind();
 
-    glActiveTexture(GL_TEXTURE2);
-    normal_texture->bind();
 
-    glActiveTexture(GL_TEXTURE3);
-    world_pos_texture->bind();
+    //framebuffer->add_read_color_texture(shadow_texture);
 
+
+    //glDepthMask(true);
+    float angle = 0;
     while(!window->should_close()) {
-
-        framebuffer->bind();
-        Engine::Render::Render_command::set_clear_color({134/255.0f,198/255.0f,247/255.0f,1});
-        Engine::Render::Renderer::begin_scene();
-        glEnable(GL_DEPTH_TEST);
 
         /// Update camera position
         auto matrix = glm::rotate(glm::mat4(1),panel->pitch(), glm::vec3(1,0,0));
@@ -593,22 +682,52 @@ int main(int argc, char** argv) {
         uniforms.viewport.m_data = camera.get_position();
         uniforms.update_viewport();
 
-        vao->bind();
-        shader_program->bind();
-        glDrawArrays(GL_TRIANGLES,0,vertices.size());
-        gui.on_update();
+        angle += 0.02;
+        scene.on_update(glm::translate(glm::mat4(1),glm::vec3(0,sin(angle),0)));
 
-        framebuffer->unbind();
-        //Engine::Render::Render_command::set_clear_color({134/255.0f,198/255.0f,247/255.0f,1});
+        /// Render to custom framebuffer
+        framebuffer->bind_write();
+        Engine::Render::Render_command::set_clear_color({0,0,0,0});
         Engine::Render::Renderer::begin_scene();
-        screen_vao->bind();
-        screen_shader->bind();
-        glDisable(GL_DEPTH_TEST);
-
-        glDrawArrays(GL_TRIANGLES,0,6);
         glEnable(GL_DEPTH_TEST);
-        screen_vao->unbind();
+        glDisable(GL_BLEND);
+        sphere_model->on_render();
 
+        uniforms.projection_matrix.m_data = shadow_camera.get_projection_matrix();
+        uniforms.view_matrix.m_data = shadow_camera.get_view_matrix();
+        uniforms.update_view_matrix();
+        uniforms.update_projection_matrix();
+
+
+        shadow_fbo->bind_write();
+        glCullFace(GL_FRONT);
+        glViewport(0,0,shadow_size,shadow_size);
+        Engine::Render::Render_command::set_clear_color({0,0,0,0});
+        Engine::Render::Renderer::begin_scene();
+
+        sphere_model->on_render();
+        shadow_fbo->unbind();
+        glViewport(0,0,window->get_width(),window->get_height());
+        glCullFace(GL_BACK);
+/*
+        uniforms.projection_matrix.m_data = camera.get_projection_matrix();
+        uniforms.view_matrix.m_data = camera.get_view_matrix();
+        uniforms.update_projection_matrix();
+        uniforms.update_view_matrix();
+*/
+        /// Second render pass to default window. This is where the "light" will shine on everything
+        /// and make it visible.
+        light_shader->bind();
+        framebuffer->bind_read();
+        glEnable(GL_BLEND);
+        glDisable(GL_DEPTH_TEST);
+        Engine::Render::Render_command::set_clear_color({134/255.0f,198/255.0f,247/255.0f,1});
+        Engine::Render::Renderer::begin_scene();
+        light_vao->bind();
+        glDrawArrays(GL_TRIANGLES,0,6);
+        light_vao->unbind();
+
+        gui.on_update();
         window->on_update();
     }
 }

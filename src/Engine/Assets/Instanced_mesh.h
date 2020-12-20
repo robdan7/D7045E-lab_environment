@@ -77,12 +77,12 @@ namespace Engine {
         /**
          * Add another instance of this mesh. This is also a work in progress.
          * @param data
-         * @param position
-         * @param radius
          */
-        uint32_t add_instance(float* data, glm::vec3 position, float radius);
-        void update_instance(float* data,glm::vec3 position,float radius, uint32_t ID);
+        uint32_t add_instance(void* data);
+        void update_instance(void* data,uint32_t offset, uint32_t ID);
         void delete_instance(uint32_t ID);
+
+        uint32_t get_instance_stride();
 
     private:
         Sparse_set<uint32_t> m_ID_pointers;

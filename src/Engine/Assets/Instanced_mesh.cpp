@@ -49,7 +49,7 @@ namespace Engine {
         //delete mesh;
     }
 
-    uint32_t Instanced_mesh::add_instance(float *data, glm::vec3 position, float radius) {
+    uint32_t Instanced_mesh::add_instance(void *data) {
         uint32_t ID;
         if (this->m_last_deleted == MAX) {
             ID = this->m_instance_IDs.size();
@@ -65,13 +65,13 @@ namespace Engine {
 
 
         auto instance_data_size = this->m_instance_buffer_data->get_layout().get_stride();
-        if (this->m_instance_buffer_data->get_size() < this->m_instances*instance_data_size) {
+        if (this->m_instance_buffer_data->get_size() < (this->m_instances+1)*instance_data_size) {
             this->m_instance_buffer_data->resize_buffer(this->m_instance_buffer_data->get_size()+instance_data_size);
             //this->m_instance_bounding_spheres->resize_buffer(this->m_instance_bounding_spheres->get_size() + this->m_instance_bounding_spheres->get_layout().get_stride());
         }
 
         this->m_instance_buffer_data->set_sub_data(data, this->m_instances * instance_data_size, instance_data_size);
-        float sphere[] = {position.x, position.y, position.z, radius};
+        //float sphere[] = {position.x, position.y, position.z, radius};
         //this->m_instance_bounding_spheres->set_sub_data(sphere, this->m_instances * m_instance_bounding_spheres->get_layout().get_stride(), m_instance_bounding_spheres->get_layout().get_stride());
         this->m_instances ++;
 
@@ -102,10 +102,14 @@ namespace Engine {
         }
     }
 
-    void Instanced_mesh::update_instance(float *data,glm::vec3 position, float radius, uint32_t instance) {
-        this->m_instance_buffer_data->set_sub_data(data, this->m_ID_pointers.offset(instance) * this->m_instance_buffer_data->get_layout().get_stride(), this->m_instance_buffer_data->get_layout().get_stride());
-        float sphere[] = {position.x, position.y, position.z, radius};
+    void Instanced_mesh::update_instance(void *data,uint32_t offset,  uint32_t instance) {
+        this->m_instance_buffer_data->set_sub_data(data, this->m_ID_pointers.index(instance) * this->m_instance_buffer_data->get_layout().get_stride()+offset, this->m_instance_buffer_data->get_layout().get_stride()-offset);
+        //float sphere[] = {position.x, position.y, position.z, radius};
         //this->m_instance_bounding_spheres->set_sub_data(sphere, instance * m_instance_bounding_spheres->get_layout().get_stride(), m_instance_bounding_spheres->get_layout().get_stride());
+    }
+
+    uint32_t Instanced_mesh::get_instance_stride() {
+        return this->m_instance_buffer_data->get_layout().get_stride();
     }
 
     /*

@@ -7,7 +7,7 @@ namespace Engine {
      */
     class GL_Texture2D : public Texture2D{
     public:
-        GL_Texture2D(const float& width, const float& height, uint32_t format, uint32_t type);
+        GL_Texture2D(const float& width, const float& height, uint32_t internal_format,uint32_t format, uint32_t type);
         ~GL_Texture2D();
         void bind() override;
         void unbind() override;

@@ -15,6 +15,6 @@ namespace Lab3 {
     }
 
     void GraphicsNode::on_update() {
-        this->p_mesh->update_instance((float*)&this->m_transform, glm::vec3(this->m_transform[3].x,this->m_transform[3].y,this->m_transform[3].z),1, this->m_instance_ID);
+        this->p_mesh->update_instance((float*)&this->m_transform, 0, this->m_instance_ID);
     }
 }

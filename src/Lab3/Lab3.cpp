@@ -4,8 +4,8 @@
 #include "Monochrome_material.h"
 #define PI (atan(1)*4)
 BEGIN_SHADER_CONST(Global_uniforms)
-    SET_SHADER_CONST(Engine::Matrix4_data, view_matrix)
-    SET_SHADER_CONST(Engine::Matrix4_data, projection_matrix)
+    SET_SHADER_CONST(Engine::Matrix4_data, view_matrix,false)
+    SET_SHADER_CONST(Engine::Matrix4_data,projection_matrix,false)
 END_SHADER_CONST(Global_uniforms)
 
 class Settings_panel : public Engine::ImGui_panel {
