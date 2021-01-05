@@ -18,8 +18,12 @@ namespace Engine {
          * and forward vectors.
          * @param position
          */
-        virtual void set_position_view_aligned(const glm::vec3& position) {
+        virtual void move_view_aligned(const glm::vec3& position) {
+            this->m_position += this->m_rotation*position* (glm::vec3(1,1,1)-glm::abs(this->m_up_vector));
+        }
 
+        virtual void set_rotation(glm::quat& quat) {
+            this->m_rotation = quat;
         }
 
          /**
@@ -81,6 +85,8 @@ namespace Engine {
          */
         Perspective_camera(float znear, float zfar, float fov, float aspect_ratio, const glm::vec3& upvector = glm::vec3(0,1,0));
         void on_update() override;
+
+        void set_rotation(glm::quat &quat) override;
 
         /**
          * Set the rotation of this camera. This function will effectively override any previous call to look_at().

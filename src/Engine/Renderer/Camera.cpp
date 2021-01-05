@@ -54,6 +54,11 @@ namespace Engine {
         this->m_aspect_ratio = aspect_ratio;
     }
 
+    void Perspective_camera::set_rotation(glm::quat &quat) {
+        Camera::set_rotation(quat);
+        this->m_focus = this->m_position + (glm::vec3)(glm::toMat4(this->m_rotation)* glm::vec4 (0,0,-1,0));
+    }
+
     /// ---------- Orthographic camera ----------
 
     Orthographic_camera::Orthographic_camera(float left, float right, float top, float bottom, float znear, float zfar) {

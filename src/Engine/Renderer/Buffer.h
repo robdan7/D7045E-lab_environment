@@ -71,7 +71,7 @@ namespace Engine {
         return 0;
     }
 
-    static char* get_shader_data_string(const Shader_data &type) {
+    static std::string get_shader_data_string(const Shader_data &type) {
         //switch(Render::Renderer_API::get_API()) {
             //case Render::Renderer_API::API::OpenGL:
                 switch (type) {
@@ -108,7 +108,7 @@ namespace Engine {
     struct Buffer_element {
         std::string m_name;
         Shader_data m_type;
-        char* m_string_representation;
+        std::string m_string_representation;
         /** Total size in bytes. A component with multiple vectors will have a combined size.*/
         uint32_t m_size;
         /** Size per component part in bytes. A matrix component will have the byte size of one row/column. */

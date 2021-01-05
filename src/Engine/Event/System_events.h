@@ -40,6 +40,18 @@ namespace Engine {
         Window_close_event() {}
     };
 
+    struct Hide_key_event {
+        Hide_key_event() {}
+    };
+
+    struct Show_cursor_event {
+        Show_cursor_event() {}
+    };
+
+    struct Disable_cursor_event {
+        Disable_cursor_event() {}
+    };
+
     struct Shutdown_event {
         Shutdown_event(){}
     };

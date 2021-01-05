@@ -109,6 +109,7 @@ namespace Engine {
     }
 
     void W_window::on_update() {
+        Window::on_update();
         //glClear(GL_COLOR_BUFFER_BIT);
         //glClearColor(1,1,0,1);
         glfwPollEvents();

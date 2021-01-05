@@ -2,7 +2,8 @@
 #include <string>
 #include <tuple>
 #include <Renderer/GLFW_context.h>
-
+#include <Event/Event_actor_st.h>
+#include <Event/System_events.h>
 
 namespace Engine {
     /**
@@ -28,8 +29,9 @@ namespace Engine {
      */
     class Window {
     public:
+        Window();
         virtual ~Window() {}
-        virtual void on_update() = 0;
+        virtual void on_update();
         virtual unsigned int get_height() const = 0;
         virtual unsigned int get_width() const = 0;
         virtual void set_Vsync(bool vsync) = 0;
@@ -41,5 +43,7 @@ namespace Engine {
         virtual void disable_cursor() = 0;
         virtual std::tuple<double,double> get_cursor_pos() = 0;
         virtual bool should_close() = 0;
+    protected:
+        Engine::Event_actor_obj<Engine::Hide_key_event, Engine::Show_cursor_event, Engine::Disable_cursor_event> m_event_listener;
     };
 }

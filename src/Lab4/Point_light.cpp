@@ -200,7 +200,7 @@ namespace Lab4 {
             //d = 1;
             float attenuation = pow(1-min(distance,vs.radius)/vs.radius,vs.dropoff);
             frag_color = diffuse*vec4(vs.light_color,1)*d*attenuation;
-            frag_color = vec4(1,0,1,1);
+            //frag_color = vec4(1,0,1,1); // Debug color
 
 
             vec4 view_coords = my_block.view_matrix*vec4(frag_position,1);

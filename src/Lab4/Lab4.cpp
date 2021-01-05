@@ -12,7 +12,6 @@
 #define PI (atan(1)*4)
 BEGIN_SHADER_CONST(Global_uniforms)
     SET_SHADER_CONST(Engine::Matrix4_data, viewprojection_matrix,false)
-    //SET_SHADER_CONST(Engine::Matrix4_data, projection_matrix,false)
     SET_SHADER_CONST(Engine::Float3_data, viewport,false)
     SET_SHADER_CONST(Engine::Int2_data, viewport_size, false);
     SET_SHADER_CONST(Engine::Float3_data, ambient,false)
@@ -39,6 +38,8 @@ public:
         ImGui::SliderFloat("Camera pitch",&this->m_pitch, -PI/2+0.01,PI/2-0.01);
         ImGui::SliderFloat("Camera center offset", &this->m_distance, 2,50);
         ImGui::SliderFloat("Camera FOV", &this->m_fov, 10, 90);
+
+        ImGui::Text("Press [ESC] to toggle mouse cursor\nControls: [W][A][S][D] to move");
         ImGui::End();
     }
     const float& yaw() {
@@ -65,6 +66,66 @@ private:
     int objects = 0;
     float m_fov = 45;
 };
+
+
+class Camera_controller : public Engine::Perspective_camera, public Engine::Event_actor_st<Engine::Keyboard_key_Event, Engine::Mouse_cursor_Event> {
+public:
+    Camera_controller(float znear, float zfar, float fov, float aspectRatio, const glm::vec3 &upvector=glm::vec3(0,1,0))
+            : Perspective_camera(znear, zfar, fov, aspectRatio, upvector) {
+        this->set_callback<Engine::Mouse_cursor_Event>([this](Engine::Mouse_cursor_Event event){
+            if (!this->active_camera) return;
+            float delta_x = event.xpos-old_x;
+            float delta_y = event.ypos-old_y;
+
+            old_x = event.xpos;
+            old_y = event.ypos;
+            this->pitch -= delta_x*0.0012f;
+            this->yaw -= delta_y*0.0012f;
+        });
+
+        this->set_callback<Engine::Keyboard_key_Event>([this](Engine::Keyboard_key_Event event) {
+           if (event.action == 1 && event.keycode == CL_KEY_ESCAPE) {
+               std::cout << "Key pressed" << std::endl;
+               if (!this->active_camera) {
+                   Engine::Event_system::post<Engine::Disable_cursor_event>();
+               } else {
+                   Engine::Event_system::post<Engine::Show_cursor_event>();
+               }
+               this->active_camera = !this->active_camera;
+           } else if (event.keycode == CL_KEY_A) {
+               this->movement.x -= event.action != 0 ? 1 : -1;
+           } else if (event.keycode == CL_KEY_W) {
+               this->movement.z -= event.action != 0 ? 1 : -1;
+           } else if (event.keycode == CL_KEY_S) {
+               this->movement.z += event.action != 0 ? 1 : -1;
+           } else if (event.keycode == CL_KEY_D) {
+               this->movement.x += event.action != 0 ? 1 : -1;
+           }
+
+           /// Clamp the transform speed to [-1, 1]
+           if (this->movement.x != 0) {
+               this->movement.x /= std::abs(this->movement.x);
+           }
+           if (this->movement.z != 0) {
+               this->movement.z /= std::abs(this->movement.z);
+           }
+        });
+    }
+
+    void on_update() override {
+        Perspective_camera::on_update();
+        Event_actor_st::on_update();
+        this->move_view_aligned(this->movement*0.1f);
+        this->set_rotation(this->pitch, this->yaw, 0.0f);
+    }
+
+private:
+    float pitch = 0, yaw;
+    float old_x = 0, old_y = 0;
+    bool active_camera = false;
+    glm::vec3 movement = glm::vec3(0,0,0);
+};
+
 
 int main(int argc, char** argv) {
     auto window = std::shared_ptr<Engine::Window>(Engine::Window::create_window());
@@ -175,19 +236,10 @@ int main(int argc, char** argv) {
     /// -------- Camera --------
     float aspect_ratio = ((float)window->get_width()/window->get_height());
     //auto camera = Engine::Orthographic_camera(-aspect_ratio,aspect_ratio,1,-1,0,1);
-    auto camera = Engine::Perspective_camera(0.01f,1000.0f,glm::radians(panel->fov()),aspect_ratio);
+    auto camera = Camera_controller(0.01f,1000.0f,glm::radians(panel->fov()),aspect_ratio);
     camera.set_position_axis_aligned({0.0f,0.0f,10.0f});
     camera.look_at({0.0f,0.0f,0.0f});
     camera.on_update(); /// This is the only update needed.
-
-    /*
-    uniforms.view_matrix.m_data = camera.get_view_matrix();
-    uniforms.projection_matrix.m_data = camera.get_projection_matrix();
-    uniforms.update_view_matrix();
-    uniforms.update_projection_matrix();
-    */
-    uniforms.viewprojection_matrix.m_data = camera.get_view_projection_matrix();
-    uniforms.update_viewprojection_matrix();
 
     /// Create raw mesh source
     Engine::Import_mesh mesh_data;
@@ -218,9 +270,6 @@ int main(int argc, char** argv) {
 
     auto model_2 = std::shared_ptr<Engine::Instanced_mesh>(new Engine::Instanced_mesh({{Engine::Shader_data::Float4, "color"}, {Engine::Shader_data::Float, "specular_power"}, {Engine::Shader_data::Mat4, "transform"}}, 2));
     model_2->add_LOD(mesh_data2, my_material);
-
-
-
 
 
     auto transform = glm::translate(glm::mat4(1),glm::vec3(0,0,0));
@@ -267,7 +316,7 @@ int main(int argc, char** argv) {
     auto light_vertex = Engine::Shader::create_shader_stage(GL_VERTEX_SHADER, R"(
         #version 450 core
         layout(location = 0) in vec2 position;
-        noperspective out vec2 tex_coords;
+        layout(location = 0) noperspective out vec2 tex_coords;
 
         void main() {
             gl_Position = vec4(position.x, position.y,-1,1);
@@ -349,12 +398,6 @@ int main(int argc, char** argv) {
     light_shader->compile();
     index= glGetUniformBlockIndex(light_shader->get_ID(), "Uniform_block");
     glUniformBlockBinding(light_shader->get_ID(), index, 0);
-    /*
-    glUniform1i(0, 0);
-    glUniform1i(1, 1);
-    glUniform1i(2, 2);
-    glUniform1i(3, 3);
-    */
 
     auto shadow_camera = Engine::Orthographic_camera(-12,12,12,-12,-20,20);
     shadow_camera.set_position_axis_aligned(glm::vec3(0,0,0));
@@ -365,16 +408,9 @@ int main(int argc, char** argv) {
     light_shader->bind();
     uniforms.shadow_camera.m_data = shadow_camera.get_view_projection_matrix();
     uniforms.update_shadow_camera();
-    //index = glGetUniformLocation(light_shader->get_ID(), "shadow_view_matrix");
-    //glUniformMatrix4fv(index,1,GL_FALSE,(float*)&shadow_camera.get_view_projection_matrix()[0][0]);
-
-    //auto shadow_mat = std::make_shared<Lab4::Shadowmap_material>(light_shader, shadow_camera);
 
     auto shadowmap = std::make_shared<Lab4::Shadow_map>(720, 720, window);
     auto cube_map = std::make_shared<Lab4::Cube_map>(720,720,window);
-
-    //auto shadow_texture = Engine::Texture2D::Create_empty(720, shadow_size, GL_DEPTH24_STENCIL8,GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8);
-    //shadow_fbo->set_depth_texture(shadow_texture);
 
 
     float light_data[] = {
@@ -409,12 +445,7 @@ int main(int argc, char** argv) {
     framebuffer->set_depth_texture(depth_texture);
 
 
-
-
-    //framebuffer->add_read_color_texture(shadow_texture);
     auto pointlight = Lab4::GL_Point_light::Create(1);
-    //auto light_instance = pointlight->add_instance({1,1,1},{0,0,0},1/10.0f,0);
-
 
     {
         auto light_instance = std::make_shared<Lab4::LightNode>(pointlight,glm::vec3(1.0f,1.0f,1.0f),glm::vec4(0.0f,0.0f,0.0f,1.0f),8.0f,0.75f);
@@ -432,27 +463,19 @@ int main(int argc, char** argv) {
 
     }
 
-    //pointlight->add_instance({1,1,1},{8,-2,5},0,0.1f);
-    //pointlight->add_instance({1,1,1},{0,4.5f,0},0,0.1f);
 
-    //glDepthMask(true);
     float angle = 0;
     while(!window->should_close()) {
 
         /// Update camera position
         auto matrix = glm::rotate(glm::mat4(1),panel->pitch(), glm::vec3(1,0,0));
-        glm::vec4 position = matrix*glm::vec4(0,0,panel->offset(),1);
-        matrix = glm::rotate(glm::mat4(1),panel->yaw(), glm::vec3(0,1,0));
+        matrix = glm::rotate(matrix,panel->yaw(), glm::vec3(0,1,0));
+        glm::vec4 position = glm::mat4(1)*glm::vec4(0,0,panel->offset(),1);
         position = matrix*position;
-        camera.set_position_axis_aligned(position);
+        //camera.set_position_axis_aligned(position);
         camera.set_FOV(glm::radians(panel->fov()));
         camera.on_update();
-        /*
-        uniforms.projection_matrix.m_data = camera.get_projection_matrix();
-        uniforms.view_matrix.m_data = camera.get_view_matrix();
-        uniforms.update_projection_matrix();
-        uniforms.update_view_matrix();
-         */
+
         uniforms.viewprojection_matrix.m_data = camera.get_view_projection_matrix();
         uniforms.update_viewprojection_matrix();
         uniforms.viewport.m_data = camera.get_position();
@@ -471,61 +494,25 @@ int main(int argc, char** argv) {
         model_1->on_render();
         model_2->on_render();
 
-        /*
-        uniforms.projection_matrix.m_data = shadow_camera.get_projection_matrix();
-        uniforms.view_matrix.m_data = shadow_camera.get_view_matrix();
-        uniforms.update_view_matrix();
-        uniforms.update_projection_matrix();
-        */
-        uniforms.viewprojection_matrix.m_data = shadow_camera.get_view_projection_matrix();
-        uniforms.update_viewprojection_matrix();
-
-        shadowmap->bind_write();
-        Engine::Render::Renderer::begin_scene();
-        model_1->on_render();
-        model_2->on_render();
-        shadowmap->unbind();
-
-
-        cube_map->bind_write();
-        glClear(GL_DEPTH_BUFFER_BIT);
-        //shadowmap->get_material()->bind();
-        //sphere_model->m_lod[0].mesh_partitions[0].m_vao->bind();
-        //glDrawArraysInstanced(GL_TRIANGLES,0,mesh_data.materials[0].vertices,10);
-        model_1->on_render(cube_map->get_material());
-        model_2->on_render(cube_map->get_material());
-        //sphere_model->on_render(cube_map->get_material());
-        cube_map->unbind();
-
-
         /// Second render pass to default window. This is where the "light" will shine on everything
         /// and make it visible.
-        uniforms.viewprojection_matrix.m_data = camera.get_view_projection_matrix();
-        uniforms.update_viewprojection_matrix();
-        uniforms.viewport.m_data = camera.get_position();
-        uniforms.update_viewport();
         framebuffer->bind_read();
         light_shader->bind();
-
-        for (int i = 0; i < 10; i++) {
-            glUniform1i(i,i);   /// Quick fix for sampler bindings. Not entirely sure if this belongs in the framebuffer :/
-        }
 
 
         glEnable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
         Engine::Render::Render_command::set_clear_color({134/255.0f,198/255.0f,247/255.0f,1});
         Engine::Render::Renderer::begin_scene();
-        //sunlight->on_render();
+
         /// This should be replaced by an ambient light source.
         light_vao->bind();
         glDrawArrays(GL_TRIANGLES,0,6);
         light_vao->unbind();
-        //glEnable(GL_DEPTH_CLAMP);
+
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
         pointlight->on_render();
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        //glDisable(GL_DEPTH_CLAMP);
         gui.on_update();
         window->on_update();
     }

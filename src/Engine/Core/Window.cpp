@@ -16,5 +16,21 @@ namespace Engine {
         return nullptr;
     #endif
     }
+
+    Window::Window() {
+        this->m_event_listener.set_callback_func<Engine::Hide_key_event>([this](auto event){
+            this->hide_cursor();
+        });
+        this->m_event_listener.set_callback_func<Engine::Show_cursor_event>([this](auto event){
+            this->show_cursor();
+        });
+        this->m_event_listener.set_callback_func<Engine::Disable_cursor_event>([this](auto event){
+            this->disable_cursor();
+        });
+    }
+
+    void Window::on_update() {
+        this->m_event_listener.on_update();
+    }
 }
 
