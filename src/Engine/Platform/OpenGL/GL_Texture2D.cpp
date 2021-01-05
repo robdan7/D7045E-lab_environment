@@ -3,12 +3,12 @@
 namespace Engine {
 
 
-    void GL_Texture2D::bind() {
+    void GL_Texture2D::bind() const {
         glBindTexture(GL_TEXTURE_2D, this->m_ID);
 
     }
 
-    void GL_Texture2D::unbind() {
+    void GL_Texture2D::unbind() const {
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
@@ -23,7 +23,7 @@ namespace Engine {
 
     }
 
-    uint32_t GL_Texture2D::get_ID() {
+    uint32_t GL_Texture2D::get_ID() const {
         return this->m_ID;
     }
 

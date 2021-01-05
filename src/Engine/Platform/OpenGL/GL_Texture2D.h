@@ -9,11 +9,9 @@ namespace Engine {
     public:
         GL_Texture2D(const float& width, const float& height, uint32_t internal_format,uint32_t format, uint32_t type);
         ~GL_Texture2D();
-        void bind() override;
-        void unbind() override;
-
-    private:
-        uint32_t get_ID() override;
+        void bind() const override;
+        void unbind() const override;
+        uint32_t get_ID() const override;
 
     private:
         uint32_t m_ID;

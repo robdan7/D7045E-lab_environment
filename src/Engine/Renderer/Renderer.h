@@ -70,8 +70,8 @@ namespace Engine {
 //            static void submit(const std::shared_ptr<Engine::Vertex_array>& vertex_array);
 //            static void submit_instanced(const std::shared_ptr<Engine::Shader>& shader, const std::shared_ptr<Engine::Vertex_array>& vertex_array, int instances);
 //            static void submit_arrays(const std::shared_ptr<Engine::Shader>& shader, const std::shared_ptr<Engine::Vertex_array>& vertex_array, int vertices, int instances);
-            static void submit_streamed(const std::shared_ptr<Engine::Material>& material,std::shared_ptr<Engine::Vertex_array> vertex_array, Polygon_type polygon_type, uint32_t start_vertex, uint32_t vertex_count, uint32_t instances);
-            static void submit_indexed(const std::shared_ptr<Engine::Material>& material,std::shared_ptr<Engine::Vertex_array> vertex_array,Polygon_type polygon_type, int instances);
+            static void submit_streamed(const std::shared_ptr<const Engine::Material>& material,std::shared_ptr<Engine::Vertex_array> vertex_array, Polygon_type polygon_type, uint32_t start_vertex, uint32_t vertex_count, uint32_t instances);
+            static void submit_indexed(const std::shared_ptr<const Engine::Material>& material,std::shared_ptr<Engine::Vertex_array> vertex_array,Polygon_type polygon_type, int instances);
             inline static Renderer_API::API get_API() {return Renderer_API::get_API();}
             static const Render_debug* get_debug();
         };

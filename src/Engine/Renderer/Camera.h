@@ -49,6 +49,10 @@ namespace Engine {
             this->m_up_vector = glm::toMat4(this->m_rotation) * glm::vec4(0,1,0,0);
         }
 
+        virtual void set_up_vector(const glm::vec3& upvector) {
+            this->m_up_vector = upvector;
+        }
+
         const glm::vec3& get_position() const {return this->m_position;}
         const glm::quat& get_rotation() const {return this->m_rotation;}
         const glm::mat4& get_projection_matrix() const {return this->m_projection_matrix;}
@@ -75,7 +79,7 @@ namespace Engine {
          * @param fov - Field of view in radians
          * @param aspect_ratio
          */
-        Perspective_camera(float znear, float zfar, float fov, float aspect_ratio);
+        Perspective_camera(float znear, float zfar, float fov, float aspect_ratio, const glm::vec3& upvector = glm::vec3(0,1,0));
         void on_update() override;
 
         /**

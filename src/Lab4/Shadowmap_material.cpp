@@ -1,6 +1,6 @@
 #include "Shadowmap_material.h"
 namespace Lab4 {
-    void Shadowmap_material::bind() {
+    void Shadowmap_material::bind() const {
         Material::bind();
         auto index= glGetUniformBlockIndex(this->m_shader->get_ID(), "shadow_view_matrix");
         glUniformMatrix4fv(index,1,GL_FALSE,(float*)&this->p_camera->get_view_projection_matrix());

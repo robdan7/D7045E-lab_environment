@@ -14,7 +14,9 @@
 #include "Renderer/Shader_constants.h"
 #include "Renderer/Material.h"
 #include "Renderer/Texture2D.h"
+#include "Renderer/Cube_texture2D.h"
 #include "Renderer/FrameBuffer.h"
+#include "Renderer/Light.h"
 
 #include "Event/Event_actor_st.h"
 #include "Event/Event_system.h"

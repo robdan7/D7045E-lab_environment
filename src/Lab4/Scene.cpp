@@ -20,7 +20,6 @@ namespace Lab4 {
     GeometryNode::GeometryNode(std::shared_ptr<Engine::Instanced_mesh> mesh, const void* instance_data, const glm::mat4 &transform) : p_mesh(mesh) {
         this->M = transform;
         std::vector<char> memory(mesh->get_instance_stride());
-        auto size = mesh->get_instance_stride();
         uint32_t instance_stride = mesh->get_instance_stride()-sizeof(transform);
 
 
@@ -42,5 +41,23 @@ namespace Lab4 {
         Node::on_update(parent_M);
 
         this->p_mesh->update_instance((char*)&this->PM, this->p_mesh->get_instance_stride()-sizeof(this->PM), this->m_instance_ID);
+    }
+
+    LightNode::LightNode(std::shared_ptr<Lab4::GL_Point_light> light, const glm::vec3 color, glm::vec4 position, float radius, float exp_dropoff) : Engine::Point_light(color,position,radius,exp_dropoff,false){
+        this->M = glm::translate(glm::mat4(1),glm::vec3(position.x,position.y,position.z));
+        this->M = glm::scale(this->M, glm::vec3(radius,radius,radius));
+
+        std::vector<char> memory(light->get_instance_stride());
+        uint32_t instance_stride = light->get_instance_stride()-sizeof(this->M);
+
+        float data[] = {
+                color.r,color.g,color.b,
+                radius,
+                exp_dropoff
+        };
+        std::copy((char*)data,(char*)data+instance_stride, memory.begin());
+        std::copy((char*)&this->M[0],(char*)&this->M[0]+sizeof(this->M),memory.begin()+instance_stride);
+        this->p_mesh = light;
+        this->m_instance_ID = this->p_mesh->add_instance(&memory[0]);
     }
 }

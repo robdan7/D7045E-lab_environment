@@ -38,8 +38,8 @@ namespace Engine {
          */
         GL_shader(uint32_t binary_format, const char *binary, uint32_t size);
         ~GL_shader() override;
-        void bind() override;
-        void unbind() override;
+        void bind() const override;
+        void unbind() const override;
 
         void compile() override;
 

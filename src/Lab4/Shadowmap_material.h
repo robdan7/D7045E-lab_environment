@@ -7,7 +7,7 @@ namespace Lab4 {
     public:
         Shadowmap_material(std::shared_ptr<Engine::Shader> shader, std::shared_ptr<Engine::Camera> camera);
 
-        void bind() override;
+        void bind() const override;
     private:
         std::shared_ptr<Engine::Camera> p_camera;
     };

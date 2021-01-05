@@ -2,7 +2,7 @@
 #include <Platform/OpenGL/OpenGL.h>
 namespace Lab4 {
 
-    void Monochrome_material::bind() {
+    void Monochrome_material::bind() const {
         Material::bind();
         glUniform4f(1,this->m_color.r, this->m_color.g, this->m_color.b,this->m_color.a);
     }

@@ -78,9 +78,9 @@ namespace Engine {
         return ID;
     }
 
-    void Instanced_mesh::on_render() {
+    void Instanced_mesh::on_render(std::shared_ptr<const Material> material) {
         for (auto& lod : this->m_lod) {
-           lod.on_render(this->m_instances);
+           lod.on_render(this->m_instances, material);
         }
     }
 

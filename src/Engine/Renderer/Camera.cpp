@@ -4,8 +4,8 @@ namespace Engine {
 
     /// ---------- Perspective camera ----------
 
-    Perspective_camera::Perspective_camera(float znear, float zfar, float fov, float aspect_ratio) {
-        this->m_up_vector = {0,1,0};
+    Perspective_camera::Perspective_camera(float znear, float zfar, float fov, float aspect_ratio,const glm::vec3& upvector) {
+        this->m_up_vector = upvector;
         this->m_focus = {0, 0, 0};
         this->m_rotation = {0,this->m_up_vector.x,this->m_up_vector.y,this->m_up_vector.z};
         this->m_position = {0, 0, -1};
@@ -23,7 +23,7 @@ namespace Engine {
 //        auto m_transformation_matrix =  glm::translate(m_view_matrix, -m_position);
 //        m_view_matrix = glm::inverse(transform);
 
-        m_view_projection_matrix = m_view_matrix*m_projection_matrix;
+        m_view_projection_matrix = m_projection_matrix*m_view_matrix;
         // TODO maaaaybe this should be in a generic method instead.
     }
 
@@ -67,7 +67,7 @@ namespace Engine {
 
     void Orthographic_camera::on_update() {
         this->m_view_matrix = glm::lookAt(this->m_position,this->m_focus, this->m_up_vector);
-        m_view_projection_matrix = m_view_matrix*m_projection_matrix;
+        m_view_projection_matrix = m_projection_matrix*m_view_matrix;
     }
 
     void Orthographic_camera::look_at(const glm::vec3 &position) {

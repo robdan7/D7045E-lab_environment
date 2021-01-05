@@ -17,11 +17,11 @@ namespace Engine {
     }
 
 
-    void GL_shader::GL_shader::bind() {
+    void GL_shader::GL_shader::bind() const {
         glUseProgram(this->m_program);
     }
 
-    void GL_shader::GL_shader::unbind() {
+    void GL_shader::GL_shader::unbind() const {
         glUseProgram(0);
     }
 

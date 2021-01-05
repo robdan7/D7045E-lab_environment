@@ -36,8 +36,12 @@ namespace Engine {
                 Mesh_partition(std::shared_ptr<Vertex_array> array, std::shared_ptr<Material> material, uint32_t start_vertex, uint32_t vertex_count) : m_vao(array) , m_material(material){
                     this->m_renderer = new Render::Stream_renderer(Render::Polygon_type::TRIANGLE,start_vertex,vertex_count);
                 }
-                void draw(uint32_t instances) {
-                    this->m_renderer->draw_instanced(this->m_material,this->m_vao,instances);
+                void draw(uint32_t instances,std::shared_ptr<const Material> material = nullptr) {
+                    if (material != nullptr) {
+                        this->m_renderer->draw_instanced(material,this->m_vao,instances);
+                    } else {
+                        this->m_renderer->draw_instanced(this->m_material,this->m_vao,instances);
+                    }
                 }
                 ~Mesh_partition() {
                     delete this->m_renderer;
@@ -47,9 +51,9 @@ namespace Engine {
             std::shared_ptr<Vertex_buffer> p_buffer;
             std::vector<Mesh_partition> mesh_partitions;
             Mesh_LOD(std::shared_ptr<Vertex_buffer> vertices) : p_buffer(vertices) {}
-            void on_render(uint32_t instances) {
-                for (auto& material : this->mesh_partitions) {
-                    material.draw(instances);
+            void on_render(uint32_t instances,std::shared_ptr<const Material> material = nullptr) {
+                for (auto& mesh : this->mesh_partitions) {
+                    mesh.draw(instances,material);
                 }
             }
         };
@@ -70,9 +74,9 @@ namespace Engine {
         /**
          * This should be part of an entity component. The purpose is to update all LODs.
          */
-        void on_update();
+        virtual void on_update();
 
-        void on_render();
+        virtual void on_render(std::shared_ptr<const Material> material = nullptr);
 
         /**
          * Add another instance of this mesh. This is also a work in progress.
@@ -84,7 +88,7 @@ namespace Engine {
 
         uint32_t get_instance_stride();
 
-    private:
+    protected:
         Sparse_set<uint32_t> m_ID_pointers;
         std::vector<uint32_t> m_instance_IDs;
         uint32_t m_last_deleted;

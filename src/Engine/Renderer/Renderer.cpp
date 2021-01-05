@@ -32,7 +32,7 @@ namespace Engine {
 //        }
 
 
-        void Renderer::submit_streamed(const std::shared_ptr<Engine::Material>& material,std::shared_ptr<Engine::Vertex_array> vertex_array, Polygon_type polygon_type,
+        void Renderer::submit_streamed(const std::shared_ptr<const Engine::Material>& material,std::shared_ptr<Engine::Vertex_array> vertex_array, Polygon_type polygon_type,
                                        uint32_t start_vertex, uint32_t vertex_count, uint32_t instances) {
             material->bind();
             vertex_array->bind();
@@ -42,7 +42,7 @@ namespace Engine {
             debug->rendered_objects += instances;
         }
 
-        void Renderer::submit_indexed(const std::shared_ptr<Engine::Material> &material,
+        void Renderer::submit_indexed(const std::shared_ptr<const Engine::Material> &material,
                                       std::shared_ptr<Engine::Vertex_array> vertex_array, Polygon_type polygon_type,
                                       int instances) {
             material->bind();

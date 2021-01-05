@@ -4,7 +4,7 @@
 namespace Engine {
     namespace Render {
 
-        void Stream_renderer::draw_instanced(const std::shared_ptr<Engine::Material>& material,const std::shared_ptr<Engine::Vertex_array> &vertex_array, uint32_t instances) const {
+        void Stream_renderer::draw_instanced(const std::shared_ptr<const Engine::Material>& material,const std::shared_ptr<Engine::Vertex_array> &vertex_array, uint32_t instances) const {
             Renderer::submit_streamed(material, vertex_array,this->polygons, this->start_vertex,this->vertex_count,instances);
         }
 
@@ -13,7 +13,7 @@ namespace Engine {
             this->start_vertex = start_vertex;
         }
 
-        void Index_renderer::draw_instanced(const std::shared_ptr<Engine::Material>& material,const std::shared_ptr<Engine::Vertex_array> &vertex_array, uint32_t instances) const {
+        void Index_renderer::draw_instanced(const std::shared_ptr<const Engine::Material>& material,const std::shared_ptr<Engine::Vertex_array> &vertex_array, uint32_t instances) const {
             Renderer::submit_indexed(material, vertex_array,this->polygons,instances);
         }
     }

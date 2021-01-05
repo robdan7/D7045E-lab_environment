@@ -15,10 +15,10 @@ namespace Engine {
     }
 
 
-    void GL_Framebuffer::set_depth_texture(std::shared_ptr<Texture2D> texture) {
+    void GL_Framebuffer::set_depth_texture(std::shared_ptr<const Texture2D> texture) {
         glBindFramebuffer(GL_FRAMEBUFFER, this->m_ID);
 
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, texture->get_ID(), 0);
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, texture->get_ID(), 0);
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         this->p_textures.push_back(texture);
@@ -26,7 +26,7 @@ namespace Engine {
 
     }
 
-    void GL_Framebuffer::add_write_color_texture(std::shared_ptr<Texture2D> texture) {
+    void GL_Framebuffer::add_write_color_texture(const std::shared_ptr<const Texture2D> texture) {
         this->bind_write();
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+(this->m_color_textures), GL_TEXTURE_2D, texture->get_ID(), 0);
         this->m_draw_buffers.push_back(GL_COLOR_ATTACHMENT0+this->m_color_textures);
@@ -50,11 +50,11 @@ namespace Engine {
         for (int i = 0; i < this->p_textures.size(); i++) {
             glActiveTexture(GL_TEXTURE0+i);
             this->p_textures[i]->bind();
-            glUniform1i(i,i);   /// Quick fix for sampler bindings. Not entirely sure if this belongs in the framebuffer :/
+
         }
     }
 
-    void GL_Framebuffer::add_read_color_texture(std::shared_ptr<Texture2D> texture) {
+    void GL_Framebuffer::add_read_color_texture(std::shared_ptr<const Texture2D> texture) {
         this->p_textures.push_back(texture);
     }
 }

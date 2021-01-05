@@ -4,10 +4,10 @@ namespace Engine {
     class Material {
     public:
         Material(std::shared_ptr<Shader> shader) : m_shader(shader){}
-        virtual void bind() {
+        virtual void bind() const {
             this->m_shader->bind();
         }
-        void disable() {
+        void disable() const {
             this->m_shader->unbind();
         }
     protected:

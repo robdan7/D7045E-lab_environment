@@ -21,8 +21,8 @@ namespace Engine {
         static std::shared_ptr<Shader> create_shader(const std::initializer_list<std::shared_ptr<Shader_stage>> elements);
         virtual void attach_shader_stage(std::shared_ptr<Shader_stage> shader_stage) = 0;
         virtual void compile() = 0;
-        virtual void bind() = 0;
-        virtual void unbind() = 0;
+        virtual void bind() const = 0;
+        virtual void unbind() const = 0;
         // TODO remove this. Its API specific.
         virtual uint32_t get_ID() = 0;
     };
