@@ -39,6 +39,7 @@ namespace Engine {
         }
 
         virtual void set_rotation(float pitch, float yaw, float roll) {
+            /// Why did I write this code manually :/
             double cy = cos(roll * 0.5);
             double sy = sin(roll * 0.5);
             double cp = cos(pitch * 0.5);

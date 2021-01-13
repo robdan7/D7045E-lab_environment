@@ -1,13 +1,12 @@
 #define API_OPENGL
 #include <Engine.h>
-#include "Monochrome_material.h"
+#include <algorithm>
+#include "Phong_material.h"
 #include "Scene.h"
 #include "GraphicsNode.h"
-#include "Shadowmap_material.h"
-#include "Shadow_map.h"
-#include "Cube_map.h"
 #include "Point_light.h"
 #include "Geometry.h"
+#include "Phong_material.h"
 
 #define PI (atan(1)*4)
 BEGIN_SHADER_CONST(Global_uniforms)
@@ -18,88 +17,48 @@ BEGIN_SHADER_CONST(Global_uniforms)
     SET_SHADER_CONST(Engine::Float3_data, diffuse,false)
     SET_SHADER_CONST(Engine::Float3_data, specular,false)
     SET_SHADER_CONST(Engine::Float4_data, sun_position,true)
-    SET_SHADER_CONST(Engine::Matrix4_data, shadow_camera, false);
 END_SHADER_CONST(Global_uniforms)
-
-class Settings_panel : public Engine::ImGui_panel {
-public:
-    void on_imgui_render() override {
-        ImGui_panel::on_imgui_render();
-
-        ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(ImVec2(main_viewport->GetWorkPos().x + 20, main_viewport->GetWorkPos().y + 500), ImGuiCond_FirstUseEver);
-        ImGui::SetNextWindowSize(ImVec2(550, 200), ImGuiCond_FirstUseEver);
-        ImGui::Begin("Settings");
-        ImGui::SetWindowFontScale(1.2f);
-        std::string text = "Objects rendered: ";
-        text += std::to_string(this->objects);
-        ImGui::Text(text.c_str());
-        ImGui::SliderFloat("Camera yaw", &this->m_yaw, -PI, PI);
-        ImGui::SliderFloat("Camera pitch",&this->m_pitch, -PI/2+0.01,PI/2-0.01);
-        ImGui::SliderFloat("Camera center offset", &this->m_distance, 2,50);
-        ImGui::SliderFloat("Camera FOV", &this->m_fov, 10, 90);
-
-        ImGui::Text("Press [ESC] to toggle mouse cursor\nControls: [W][A][S][D] to move");
-        ImGui::End();
-    }
-    const float& yaw() {
-        return this->m_yaw;
-    }
-    const float& pitch() {
-        return this->m_pitch;
-    }
-    const float& offset() {
-        return this->m_distance;
-    }
-
-    const float& fov() {
-        return this->m_fov;
-    }
-    void set_objects(int obj) {
-        this->objects = obj;
-    }
-
-private:
-    float m_yaw = 0;
-    float m_pitch = -0.1;
-    float m_distance = 20;
-    int objects = 0;
-    float m_fov = 45;
-};
-
 
 class Camera_controller : public Engine::Perspective_camera, public Engine::Event_actor_st<Engine::Keyboard_key_Event, Engine::Mouse_cursor_Event> {
 public:
     Camera_controller(float znear, float zfar, float fov, float aspectRatio, const glm::vec3 &upvector=glm::vec3(0,1,0))
             : Perspective_camera(znear, zfar, fov, aspectRatio, upvector) {
         this->set_callback<Engine::Mouse_cursor_Event>([this](Engine::Mouse_cursor_Event event){
-            if (!this->active_camera) return;
             float delta_x = event.xpos-old_x;
             float delta_y = event.ypos-old_y;
-
             old_x = event.xpos;
             old_y = event.ypos;
+
+            if (!this->active_camera) return;
+
             this->pitch -= delta_x*0.0012f;
             this->yaw -= delta_y*0.0012f;
         });
 
         this->set_callback<Engine::Keyboard_key_Event>([this](Engine::Keyboard_key_Event event) {
+            bool action = (bool) std::min(event.action, 1);
            if (event.action == 1 && event.keycode == CL_KEY_ESCAPE) {
-               std::cout << "Key pressed" << std::endl;
                if (!this->active_camera) {
                    Engine::Event_system::post<Engine::Disable_cursor_event>();
                } else {
                    Engine::Event_system::post<Engine::Show_cursor_event>();
                }
                this->active_camera = !this->active_camera;
-           } else if (event.keycode == CL_KEY_A) {
-               this->movement.x -= event.action != 0 ? 1 : -1;
-           } else if (event.keycode == CL_KEY_W) {
-               this->movement.z -= event.action != 0 ? 1 : -1;
-           } else if (event.keycode == CL_KEY_S) {
-               this->movement.z += event.action != 0 ? 1 : -1;
-           } else if (event.keycode == CL_KEY_D) {
-               this->movement.x += event.action != 0 ? 1 : -1;
+               return;
+           }
+
+           if (event.keycode == CL_KEY_A && key_states[2] != action) {
+               this->movement.x -= action != 0 ? 1 : -1;
+               key_states[2] = action;
+           } else if (event.keycode == CL_KEY_W && key_states[0] != action) {
+               this->movement.z -= action != 0 ? 1 : -1;
+               key_states[0] = action;
+           } else if (event.keycode == CL_KEY_S && key_states[1] != action) {
+               this->movement.z += action != 0 ? 1 : -1;
+               key_states[1] = action;
+           } else if (event.keycode == CL_KEY_D && key_states[3] != action) {
+               this->movement.x += action != 0 ? 1 : -1;
+               key_states[3] = action;
            }
 
            /// Clamp the transform speed to [-1, 1]
@@ -113,39 +72,165 @@ public:
     }
 
     void on_update() override {
+        this->move_view_aligned(this->movement*0.05f);
+        this->set_rotation(this->pitch, this->yaw, 0.0f);
         Perspective_camera::on_update();
         Event_actor_st::on_update();
-        this->move_view_aligned(this->movement*0.1f);
-        this->set_rotation(this->pitch, this->yaw, 0.0f);
+
     }
 
 private:
-    float pitch = 0, yaw;
+    float pitch = 0, yaw = 0;
     float old_x = 0, old_y = 0;
     bool active_camera = false;
     glm::vec3 movement = glm::vec3(0,0,0);
+    bool key_states[4] = {0,0,0,0};   // W, S, A, D
 };
 
 
-int main(int argc, char** argv) {
-    auto window = std::shared_ptr<Engine::Window>(Engine::Window::create_window());
-    Global_uniforms uniforms;
-    uniforms.viewport_size.m_data = glm::ivec2(window->get_width(),window->get_height());
-    uniforms.update_viewport_size();
+class Robot_controller : public Engine::ImGui_panel {
+public:
+    Robot_controller(glm::vec3 position) : m_position(position){
 
-    auto gui = Engine::ImGui_layer(window);
-    auto panel = std::make_shared<Settings_panel>();
-    gui.push_panel(panel);
 
-    /// -------- Shaders --------
-    auto vertex = Engine::Shader::create_shader_stage(
-            GL_VERTEX_SHADER,
-            R"(
+        /// Create raw mesh source
+        Engine::Import_mesh mesh_data;
+        Lab4::create_prism(mesh_data.vertices, 2, 1, 32);
+        mesh_data.materials.emplace_back("", 0);
+        mesh_data.materials[0].vertices = mesh_data.vertices.size() / 6;
+        mesh_data.draw_type = Engine::Draw_type::STREAM;
+        mesh_data.m_vertex_buffer = Engine::Vertex_buffer::Create(
+                &mesh_data.vertices[0], mesh_data.vertices.size() * sizeof(mesh_data.vertices[0]),
+                Engine::Raw_buffer::Access_frequency::STATIC,
+                Engine::Raw_buffer::Access_type::DRAW);
+
+
+        this->m_mesh = std::shared_ptr<Engine::Instanced_mesh>(new Engine::Instanced_mesh({
+                                                                                                  {Engine::Shader_data::Float4, "color"},
+                                                                                                  {Engine::Shader_data::Float,  "specular_power"},
+                                                                                                  {Engine::Shader_data::Float,  "shininess"},
+                                                                                                  {Engine::Shader_data::Mat4,   "transform"}},
+                                                                                          1));
+
+        this->m_mesh->add_LOD(mesh_data, Lab4::Phong_material::Create());
+
+        /// ------------------       Create robot limbs       ------------------
+        {
+            auto mat = glm::translate(glm::mat4(1), position);
+            std::vector<float> data = {0.1f, 0.6f, 1.0f, 1, 128,1};
+            auto node = std::make_shared<Lab4::GeometryNode>(this->m_mesh, &data[0], mat);
+            this->m_limbs.push_back(node);
+        }
+        this->m_rotations.resize(4);
+        for (int i = 0; i < 3; ++i) {
+            auto mat = glm::translate(glm::mat4(1), glm::vec3(0,2.0f,0));
+            std::vector<float> data = {0.3f+(float)i/3.0f, 1.0f, 1.0f, 1,128,1};
+            auto node = std::make_shared<Lab4::GeometryNode>(this->m_mesh, &data[0], mat);
+            this->m_limbs.back()->add_node(node);
+            this->m_limbs.push_back(node);
+        }
+        {
+            auto mat = glm::translate(glm::mat4(1), glm::vec3(0.3f,2.0f,0));
+            mat = glm::scale(mat, glm::vec3(0.4f,0.4f,0.4f));
+            std::vector<float> data = {0.2f, 0.2f, 1.0f, 1, 0,0};
+            this->m_grabber_A = std::make_shared<Lab4::GeometryNode>(this->m_mesh,&data[0], mat);
+            mat = glm::translate(glm::mat4(1), glm::vec3(-0.3f,2.0f,0));
+            mat = glm::scale(mat, glm::vec3(0.4f,0.4f,0.4f));
+            this->m_grabber_B = std::make_shared<Lab4::GeometryNode>(this->m_mesh, &data[0], mat);
+            this->m_limbs.back()->add_node(m_grabber_B);
+            this->m_limbs.back()->add_node(m_grabber_A);
+        }
+    }
+
+    void on_imgui_render() override {
+        ImGui_panel::on_imgui_render();
+
+        ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(ImVec2(main_viewport->GetWorkPos().x + 20, main_viewport->GetWorkPos().y + 500), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(550, 200), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Test panel");
+        ImGui::SetWindowFontScale(1.2f);
+        ImGui::Text("Press [ESC] to toggle camera control\nControls: [W][A][S][D] to move");  ///
+        ImGui::SliderFloat("Y rotation", &this->m_absolute_rotation, -180, 180);
+        ImGui::SliderFloat("Grab ", &this->m_grabber_rotation, 0, 30);
+        for (int i= 1; i < this->m_rotations.size(); ++i) {
+            std::string s = "X rotation node ";
+            s += std::to_string(i);
+            ImGui::SliderFloat(s.c_str(), &this->m_rotations[i], 0, 80);
+        }
+
+
+        ImGui::End();
+
+        {
+            glm::vec3 euler_angles(glm::radians(this->m_rotations[0]), glm::radians(this->m_absolute_rotation), 0);
+            auto quatern = glm::quat(euler_angles);
+            this->m_limbs[0]->reset_transform();
+            this->m_limbs[0]->translate(this->m_position);
+            this->m_limbs[0]->rotate(quatern);
+
+            this->m_limbs[0]->translate(glm::vec3(0,1,0));
+        }
+        {
+            this->m_grabber_B->reset_transform();
+            this->m_grabber_A->reset_transform();
+
+            float angle = glm::radians(this->m_grabber_rotation);
+            this->m_grabber_A->translate(glm::vec3(0.3f,1.0f,0));
+            this->m_grabber_A->scale(glm::vec3(0.4f,0.4f,0.4f));
+            this->m_grabber_A->rotate(angle, glm::vec3(0,0,1));
+            this->m_grabber_A->translate(glm::vec3(0,1.0f,0));
+
+            this->m_grabber_B->translate(glm::vec3(-0.3f,1.0f,0));
+            this->m_grabber_B->scale(glm::vec3(0.4f,0.4f,0.4f));
+            this->m_grabber_B->rotate(-angle, glm::vec3(0,0,1));
+            this->m_grabber_B->translate(glm::vec3(0,1.0f,0));
+        }
+
+        for (int i = 1; i < this->m_limbs.size(); ++i) {
+            this->m_limbs[i]->reset_transform();
+
+            glm::vec3 euler_angles(glm::radians(this->m_rotations[i]),0,0);
+            auto quatern = glm::quat(euler_angles);
+            this->m_limbs[i]->translate(glm::vec3(0,1.0f,0));
+            this->m_limbs[i]->rotate(quatern);
+            this->m_limbs[i]->translate(glm::vec3(0,1.0f,0));
+        }
+    }
+
+    std::shared_ptr<Engine::Instanced_mesh> get_mesh() {
+        return this->m_mesh;
+    }
+
+    std::shared_ptr<Lab4::InnerNode> get_node() {
+        return this->m_limbs.front();
+    }
+
+private:
+    std::shared_ptr<Engine::Instanced_mesh> m_mesh;
+    //std::shared_ptr<Lab4::GeometryNode> m_arm;
+    std::vector<std::shared_ptr<Lab4::GeometryNode>> m_limbs;
+    std::shared_ptr<Lab4::GeometryNode> m_grabber_A, m_grabber_B;
+    Engine::ImGui_panel m_panel;
+    std::vector<float> m_rotations = {30,30,30,30};
+    float m_absolute_rotation = 0;
+    float m_grabber_rotation = 0;
+    glm::vec3 m_position;
+};
+
+
+struct Floor {
+public:
+    Floor(glm::vec3 position) {
+        /// -------- Shaders --------
+        auto vertex = Engine::Shader::create_shader_stage(
+                GL_VERTEX_SHADER,
+                R"(
             #version 450 core
             layout(location = 0) in vec3 position;
             layout(location = 1) in vec3 normal;
             layout(location = 2) in vec4 instance_color;
-            layout(location = 3) in float specular_power;
+            layout(location = 3) in vec4 alternate_color;
             layout(location = 4) in mat4 transform;
 
 
@@ -153,7 +238,6 @@ int main(int argc, char** argv) {
             layout(location = 0) out vec3 vs_normal;
             layout(location = 1) out vec3 vs_position;
             layout(location = 2) out vec4 vs_color;
-            layout(location = 3) out float vs_spec_power;
 
 
             layout(std140) uniform Uniform_block {
@@ -165,33 +249,42 @@ int main(int argc, char** argv) {
                 vec3 diffuse;
                 vec3 specular;
                 vec4 sun;
-                mat4 shadow_camera;
             } my_block;
 
             void main() {
                 gl_Position = my_block.view_matrix*transform*vec4(position,1);
                 vs_position = (transform*vec4(position,1)).xyz;
                 vs_normal = normalize((transform*vec4(normal,0)).xyz);
-                vs_color = instance_color;
-                vs_spec_power = specular_power;
+
+                // Hotfix for getting row and square numbering.
+                int triangle_id = (gl_VertexID-gl_VertexID%6)%4;
+                int row_id = ((gl_VertexID-gl_VertexID%(6*8)))%32;
+
+                if (triangle_id > 0) {
+                    vs_color = mix(alternate_color,instance_color, row_id);
+                } else {
+                    vs_color = mix(instance_color,alternate_color, row_id);
+                }
+                //vs_color *= row_id / 16.0;
+                //vs_color = mix(instance_color, alternate_color, triangle_id%2);
 
             }
 
             )");
-    auto fragment = Engine::Shader::create_shader_stage(
-            GL_FRAGMENT_SHADER,
-            R"(
+        auto fragment = Engine::Shader::create_shader_stage(
+                GL_FRAGMENT_SHADER,
+                R"(
             #version 450 core
             layout(location = 0) in vec3 vs_normal;
             layout(location = 1) in vec3 world_pos;
             layout(location = 2) in vec4 vs_color;
-            layout(location = 3) in float vs_spec_power;
 
 
             layout(location = 0) out vec4 diffuse_color;
             layout(location = 1) out float specular_power;
-            layout(location = 2) out vec3 fragment_normal;
-            layout(location = 3) out vec3 world_position;
+            layout(location = 2) out float shininess;
+            layout(location = 3) out vec3 fragment_normal;
+            layout(location = 4) out vec3 world_position;
 
 
             layout(std140) uniform Uniform_block {
@@ -203,116 +296,232 @@ int main(int argc, char** argv) {
                 vec3 diffuse;
                 vec3 specular;
                 vec4 sun;
-                mat4 shadow_camera;
             } my_block;
 
             //layout(location = 1) uniform vec4 ambient_color;
 
             void main() {
                 diffuse_color = vs_color;
-                specular_power = vs_spec_power;
+                specular_power = 1;
                 fragment_normal = normalize(vs_normal);
                 world_position = world_pos;
+                shininess = 0;
             }
             )");
 
-    auto shader_program = Engine::Shader::create_shader({vertex, fragment});
-    shader_program->compile();
+        auto shader_program = Engine::Shader::create_shader({vertex, fragment});
+        shader_program->compile();
 
-    /// The uniform bindings must be done manually.
-    GLuint index= glGetUniformBlockIndex(shader_program->get_ID(), "Uniform_block");
-    glUniformBlockBinding(shader_program->get_ID(), index, 0);
+        /// The uniform bindings must be done manually.
+        GLuint index= glGetUniformBlockIndex(shader_program->get_ID(), "Uniform_block");
+        glUniformBlockBinding(shader_program->get_ID(), index, 0);
+
+
+        /// Create raw mesh source
+        Engine::Import_mesh mesh_data;
+        //Lab4::create_sphere(mesh_data.vertices,64);
+        Lab4::create_floor(mesh_data.vertices, 8, 8, 8);
+        mesh_data.materials.emplace_back("", 0);
+        mesh_data.materials[0].vertices = mesh_data.vertices.size() / 6;
+        mesh_data.draw_type = Engine::Draw_type::STREAM;
+        mesh_data.m_vertex_buffer = Engine::Vertex_buffer::Create(
+                &mesh_data.vertices[0], mesh_data.vertices.size() * sizeof(mesh_data.vertices[0]),
+                Engine::Raw_buffer::Access_frequency::STATIC,
+                Engine::Raw_buffer::Access_type::DRAW);
+
+        /// container for the pink cube
+        auto my_material = std::make_shared<Engine::Material>(shader_program);
+        this->m_mesh = std::shared_ptr<Engine::Instanced_mesh>(new Engine::Instanced_mesh({
+                                                                                             {Engine::Shader_data::Float4, "colorA"},
+                                                                                             {Engine::Shader_data::Float4, "colorB"},
+                                                                                             {Engine::Shader_data::Mat4,   "transform"}},
+                                                                                     1));
+        this->m_mesh->add_LOD(mesh_data, my_material);
+
+        auto mat = glm::translate(glm::mat4(1), position);
+        std::vector<float> data = {0.4f, 0.4f, 0.4f, 1, 1, 1, 1, 1};
+
+        this->m_node = std::make_shared<Lab4::GeometryNode>(this->m_mesh, &data[0], mat);
+
+    }
+
+    std::shared_ptr<Lab4::InnerNode> get_node() {
+        return this->m_node;
+    }
+
+    std::shared_ptr<Engine::Instanced_mesh> get_mesh() {
+        return this->m_mesh;
+    }
+
+private:
+    std::shared_ptr<Engine::Instanced_mesh> m_mesh;
+    std::shared_ptr<Lab4::GeometryNode> m_node;
+};
+
+int main(int argc, char** argv) {
+    auto window = std::shared_ptr<Engine::Window>(Engine::Window::create_window());
+    Global_uniforms uniforms;
+    uniforms.viewport_size.m_data = glm::ivec2(window->get_width(),window->get_height());
+    uniforms.update_viewport_size();
 
     uniforms.ambient.m_data = glm::fvec3(0.3,0.3,0.3);
     uniforms.diffuse.m_data = glm::fvec3(0.7,0.7,0.7);
     uniforms.sun_position.m_data = glm::fvec4 (0,0,0,1.0f);
     uniforms.specular.m_data = glm::fvec3(1.0f,1.0f,1.0f);
-    //uniforms.sun_position.m_data /= glm::length(uniforms.sun_position.m_data);
     uniforms.update_ambient();
     uniforms.update_diffuse();
     uniforms.update_specular();
     uniforms.update_sun_position();
 
-    /// -------- Camera --------
+    auto gui = Engine::ImGui_layer(window);
+
+    /// ------------------       Camera       ------------------
     float aspect_ratio = ((float)window->get_width()/window->get_height());
-    //auto camera = Engine::Orthographic_camera(-aspect_ratio,aspect_ratio,1,-1,0,1);
-    auto camera = Camera_controller(0.01f,1000.0f,glm::radians(panel->fov()),aspect_ratio);
-    camera.set_position_axis_aligned({0.0f,0.0f,10.0f});
-    camera.look_at({0.0f,0.0f,0.0f});
-    camera.on_update(); /// This is the only update needed.
-
-    /// Create raw mesh source
-    Engine::Import_mesh mesh_data;
-    Lab4::create_sphere(mesh_data.vertices,64);
-    mesh_data.materials.emplace_back("",0);
-    mesh_data.materials[0].vertices =mesh_data.vertices.size()/6;
-    mesh_data.draw_type = Engine::Draw_type::STREAM;
-    mesh_data.m_vertex_buffer = Engine::Vertex_buffer::Create(
-            &mesh_data.vertices[0],mesh_data.vertices.size()*sizeof(mesh_data.vertices[0]),
-            Engine::Raw_buffer::Access_frequency::STATIC,
-            Engine::Raw_buffer::Access_type::DRAW);
-
-    /// container for the pink cube
-    auto my_material = std::make_shared<Engine::Material>(shader_program);
-    auto model_1 = std::shared_ptr<Engine::Instanced_mesh>(new Engine::Instanced_mesh({{Engine::Shader_data::Float4, "color"}, {Engine::Shader_data::Float, "specular_power"}, {Engine::Shader_data::Mat4, "transform"}}, 2));
-    model_1->add_LOD(mesh_data, my_material);
+    auto camera = Camera_controller(0.01f,1000.0f,glm::radians(60.0f),aspect_ratio);
+    camera.set_position_axis_aligned({0.0f,1.0f,5.0f});
 
 
-    Engine::Import_mesh mesh_data2;
-    Lab4::create_prism(mesh_data2.vertices,1,10,64);
-    mesh_data2.materials.emplace_back("",0);
-    mesh_data2.materials[0].vertices =mesh_data2.vertices.size()/6;
-    mesh_data2.draw_type = Engine::Draw_type::STREAM;
-    mesh_data2.m_vertex_buffer = Engine::Vertex_buffer::Create(
-            &mesh_data2.vertices[0],mesh_data2.vertices.size()*sizeof(mesh_data2.vertices[0]),
-            Engine::Raw_buffer::Access_frequency::STATIC,
-            Engine::Raw_buffer::Access_type::DRAW);
+    /// ------------------ Create scene graph ------------------
+    auto scene = std::make_shared<Lab4::InnerNode>(glm::mat4(1));
+    std::vector<std::shared_ptr<Engine::Instanced_mesh>> meshes;
+    Floor floor = Floor(glm::vec3(-4, 0, -4));
+    meshes.push_back(floor.get_mesh());
+    scene->add_node(floor.get_node());
 
-    auto model_2 = std::shared_ptr<Engine::Instanced_mesh>(new Engine::Instanced_mesh({{Engine::Shader_data::Float4, "color"}, {Engine::Shader_data::Float, "specular_power"}, {Engine::Shader_data::Mat4, "transform"}}, 2));
-    model_2->add_LOD(mesh_data2, my_material);
+    /// ------------------ Create robot arm ------------------
+    auto arm = std::make_shared<Robot_controller>(glm::vec3(4, 0, -1));
+    meshes.push_back(arm->get_mesh());
+    gui.push_panel(arm);
+    floor.get_node()->add_node(arm->get_node());
 
 
-    auto transform = glm::translate(glm::mat4(1),glm::vec3(0,0,0));
-    auto scene = Lab4::InnerNode(transform);
+
+    /// ------------------ Create static meshes ------------------
+    auto global_phong_material = Lab4::Phong_material::Create();
     {
-        auto mat = glm::translate(glm::mat4(1), glm::vec3(0, -3, 0));
-        std::vector<float> data = {1, 1, 1, 1, 6};
+        /// ------------------      Sphere      ------------------
+        Engine::Import_mesh sphere_data;
+        //Lab4::create_sphere(mesh_data.vertices,64);
+        Lab4::create_sphere(sphere_data.vertices, 32);
+        sphere_data.materials.emplace_back("", 0);
+        sphere_data.materials[0].vertices = sphere_data.vertices.size() / 6;
+        sphere_data.draw_type = Engine::Draw_type::STREAM;
+        sphere_data.m_vertex_buffer = Engine::Vertex_buffer::Create(
+                &sphere_data.vertices[0], sphere_data.vertices.size() * sizeof(sphere_data.vertices[0]),
+                Engine::Raw_buffer::Access_frequency::STATIC,
+                Engine::Raw_buffer::Access_type::DRAW);
+
+        auto sphere_mesh = std::shared_ptr<Engine::Instanced_mesh>(new Engine::Instanced_mesh({
+                                                                                                 {Engine::Shader_data::Float4, "color"},
+                                                                                                 {Engine::Shader_data::Float,  "specular_power"},
+                                                                                                 {Engine::Shader_data::Float,  "shininess"},
+                                                                                                 {Engine::Shader_data::Mat4,   "transform"}},
+                                                                                              8));
+        sphere_mesh->add_LOD(sphere_data, global_phong_material);
+        meshes.push_back(sphere_mesh);
         {
-            auto instance_1 = std::make_shared<Lab4::GeometryNode>(model_1, &data[0], mat);
-            scene.add_node(instance_1);
-        }
-        {
-            data = {0.1f,0.3f,1,1,0};
-            mat = glm::translate(glm::mat4(1),glm::vec3(0,3,0));
-            auto instance_1 = std::make_shared<Lab4::GeometryNode>(model_1, &data[0], mat);
-            scene.add_node(instance_1);
-        }
-/*
-        {
-            data = {1,0.6f,0.6f,1,1};
-            mat = glm::translate(glm::scale(glm::mat4(1),glm::vec3(3,1,3)),glm::vec3(0,5,0));
-            auto instance_2 = std::make_shared<Lab4::GeometryNode>(model_2, &data[0], mat);
-            scene.add_node(instance_2);
-        }
-*/
-        {
-            data = {0.2f, 0.8f, 0.7f, 1, 1};
-            mat = glm::translate(glm::scale(glm::mat4(1), glm::vec3(3, 1, 3)), glm::vec3(0, -5, 0));
-            auto instance_2 = std::make_shared<Lab4::GeometryNode>(model_2, &data[0], mat);
-            scene.add_node(instance_2);
+            for (float x = 0.5f; x < 8.0f; x += 1.0f) {
+                float data[6] = {1.0f, 0.7f, 0.4f, 1.0f, 128.0f,std::pow(x/8.0f,2)};
+                auto mat = glm::translate(glm::mat4(1), glm::vec3(x,3.0f,4.5f));
+                mat = glm::scale(mat, glm::vec3(0.3f,0.3f,0.3f));
+                auto instance = std::make_shared<Lab4::GeometryNode>(sphere_mesh, data, mat);
+                floor.get_node()->add_node(instance);
+            }
         }
 
+
+        /// ------------------   Cone/pyramid    ------------------
+        Engine::Import_mesh cone_data;
+        {
+            Lab4::create_cone(cone_data.vertices, 1.5f, 1, 8);
+            cone_data.materials.emplace_back("", 0);
+            cone_data.materials[0].vertices = cone_data.vertices.size() / 6;
+            cone_data.draw_type = Engine::Draw_type::STREAM;
+            cone_data.m_vertex_buffer = Engine::Vertex_buffer::Create(
+                    &cone_data.vertices[0], cone_data.vertices.size() * sizeof(cone_data.vertices[0]),
+                    Engine::Raw_buffer::Access_frequency::STATIC,
+                    Engine::Raw_buffer::Access_type::DRAW);
+        }
+
+        auto cone_mesh = std::shared_ptr<Engine::Instanced_mesh>(new Engine::Instanced_mesh({
+                                                                                                      {Engine::Shader_data::Float4, "color"},
+                                                                                                      {Engine::Shader_data::Float,  "specular_power"},
+                                                                                                      {Engine::Shader_data::Float,  "shininess"},
+                                                                                                      {Engine::Shader_data::Mat4,   "transform"}},
+                                                                                              1));
+        cone_mesh->add_LOD(cone_data, global_phong_material);
+        meshes.push_back(cone_mesh);
+        {
+            float data[6] = {1.0f, 1.0f, 1.0f, 1.0f, 512.0f,1.0f};
+            auto mat = glm::translate(glm::mat4(1), glm::vec3(4.5f,0.0f,0.5f));
+            auto instance = std::make_shared<Lab4::GeometryNode>(cone_mesh, data, mat);
+            floor.get_node()->add_node(instance);
+        }
+
+        /// ------------------      Cube     ------------------
+        Engine::Import_mesh cube_data;
+        {
+            Lab4::create_cube(cube_data.vertices,0.8f);
+            cube_data.materials.emplace_back("", 0);
+            cube_data.materials[0].vertices = cube_data.vertices.size() / 6;
+            cube_data.draw_type = Engine::Draw_type::STREAM;
+            cube_data.m_vertex_buffer = Engine::Vertex_buffer::Create(
+                    &cube_data.vertices[0], cube_data.vertices.size() * sizeof(cube_data.vertices[0]),
+                    Engine::Raw_buffer::Access_frequency::STATIC,
+                    Engine::Raw_buffer::Access_type::DRAW);
+        }
+        auto cube_mesh = std::shared_ptr<Engine::Instanced_mesh>(new Engine::Instanced_mesh({
+                                                                                                    {Engine::Shader_data::Float4, "color"},
+                                                                                                    {Engine::Shader_data::Float,  "specular_power"},
+                                                                                                    {Engine::Shader_data::Float,  "shininess"},
+                                                                                                    {Engine::Shader_data::Mat4,   "transform"}},
+                                                                                            1));
+        cube_mesh->add_LOD(cube_data,global_phong_material);
+        meshes.push_back(cube_mesh);
+        {
+            float data[6] = {1.0f, 1.0f, 1.0f, 1.0f, 512.0f,1.0f};
+            auto mat = glm::translate(glm::mat4(1), glm::vec3(3.5f,0.4f,0.5f));
+            auto instance = std::make_shared<Lab4::GeometryNode>(cube_mesh, data, mat);
+            floor.get_node()->add_node(instance);
+        }
+
+        /// ------------------     Prism    ------------------
+        Engine::Import_mesh prism_data;
+        //Lab4::create_sphere(mesh_data.vertices,64);
+        Lab4::create_prism(prism_data.vertices, 0.5f, 0.4f, 32);
+        prism_data.materials.emplace_back("", 0);
+        prism_data.materials[0].vertices = prism_data.vertices.size() / 6;
+        prism_data.draw_type = Engine::Draw_type::STREAM;
+        prism_data.m_vertex_buffer = Engine::Vertex_buffer::Create(
+                &prism_data.vertices[0], prism_data.vertices.size() * sizeof(prism_data.vertices[0]),
+                Engine::Raw_buffer::Access_frequency::STATIC,
+                Engine::Raw_buffer::Access_type::DRAW);
+
+
+        auto prism_mesh = std::shared_ptr<Engine::Instanced_mesh>(new Engine::Instanced_mesh({
+                                                                                                  {Engine::Shader_data::Float4, "color"},
+                                                                                                  {Engine::Shader_data::Float,  "specular_power"},
+                                                                                                  {Engine::Shader_data::Float,  "shininess"},
+                                                                                                  {Engine::Shader_data::Mat4,   "transform"}},
+                                                                                          1));
+        prism_mesh->add_LOD(prism_data, global_phong_material);
+        meshes.push_back(prism_mesh);
+        {
+            for (float x = 0.5f; x < 8.0f; ++x) {
+                float data[6] = {1.0f, 1.0f, 1.0f, 1.0f, 4.0f,0.5f};
+                auto mat = glm::translate(glm::mat4(1), glm::vec3(x,0.25f,1.5f));
+                float scale = x/10.0f;
+                mat = glm::scale(mat, glm::vec3(scale,scale,scale));
+                auto instance = std::make_shared<Lab4::GeometryNode>(prism_mesh, data, mat);
+                floor.get_node()->add_node(instance);
+            }
+        }
     }
 
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-    glEnable(GL_CULL_FACE);
-    glLineWidth(3);
-    glPointSize(3);
-    glCullFace(GL_BACK);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_BLEND);
-    Engine::Render::Render_command::set_clear_color({134/255.0f,198/255.0f,247/255.0f,1});
+
+
+
+    /// ------------------      Temporary code for an ambient light source     ------------------
     auto light_vertex = Engine::Shader::create_shader_stage(GL_VERTEX_SHADER, R"(
         #version 450 core
         layout(location = 0) in vec2 position;
@@ -324,7 +533,6 @@ int main(int argc, char** argv) {
             //tex_coords = vec2(1,1);
         }
     )");
-
     auto light_fragment = Engine::Shader::create_shader_stage(GL_FRAGMENT_SHADER, R"(
         #version 450 core
         layout(location = 0) noperspective in vec2 tex_coords;
@@ -333,9 +541,9 @@ int main(int argc, char** argv) {
 
         layout(location = 0) uniform sampler2D diffuse_texture;
         layout(location = 1) uniform sampler2D specular_texture;
-        layout(location = 2) uniform sampler2D normal_texture;
-        layout(location = 3) uniform sampler2D frag_coord_texture;
-        layout(location = 4) uniform samplerCube depth_texture;
+        layout(location = 2) uniform sampler2D shininess_texture;
+        layout(location = 3) uniform sampler2D normal_texture;
+        layout(location = 4) uniform sampler2D frag_coord_texture;
 
         layout(std140) uniform Uniform_block {
             mat4 view_matrix;
@@ -346,31 +554,7 @@ int main(int argc, char** argv) {
             vec3 diffuse;
             vec3 specular;
             vec4 sun;
-            mat4 shadow_camera;
         } my_block;
-
-        uniform mat4 shadow_view_matrix;
-
-
-        vec3 phong(vec3 color,vec3 fragPos, vec3 normal,vec3 viewport, vec4 light, vec3 ambient, vec3 diffuse, vec3 specular) {
-                vec3 light_normal = normalize(light.xyz-fragPos*light.w);
-                vec3 viewDir = normalize(viewport - fragPos);
-                vec3 reflect = reflect(-light_normal,normal);
-                float spec_power = pow(max(dot(reflect,viewDir),0.0),32);
-
-
-                float d = dot(normal,light_normal);
-                if (d > 0) {
-                    vec3 specular_light = specular*spec_power;
-                    vec3 diffuse_light = diffuse*d;
-                    return color*(ambient+diffuse_light+ specular_light);
-                } else {
-                    return color*ambient;
-                }
-
-
-            }
-
 
 
         void main() {
@@ -379,39 +563,13 @@ int main(int argc, char** argv) {
             float specular_power = texture(specular_texture, tex_coords).r;
             vec3 frag_position = texture(frag_coord_texture, tex_coords).xyz;
 
-            vec4 shadow_coords = my_block.view_matrix*vec4(frag_position,1);
-            //float shadow_depth = texture(depth_texture, shadow_coords.xy*0.5+0.5).r;
-            float shadow_depth = texture(depth_texture, frag_position).r*100;
-
-            float depth = shadow_coords.z*0.5+0.5;
-            depth = length(frag_position);
-
-            float my_var = shadow_depth+0.05 > depth ? 1 : 0;
-
-            vec3 color = phong(diffuse.rgb,frag_position.xyz,normal,my_block.viewport,my_block.sun,my_block.ambient,my_block.diffuse*my_var,specular_power*my_block.specular*my_var);
             frag_color = vec4( diffuse.rgb*0.1,diffuse.a);
-            gl_FragDepth = (shadow_coords.z/shadow_coords.w*0.5+0.5);
         }
     )");
-
     auto light_shader = Engine::Shader::create_shader({light_vertex, light_fragment});
     light_shader->compile();
-    index= glGetUniformBlockIndex(light_shader->get_ID(), "Uniform_block");
+    auto index= glGetUniformBlockIndex(light_shader->get_ID(), "Uniform_block");
     glUniformBlockBinding(light_shader->get_ID(), index, 0);
-
-    auto shadow_camera = Engine::Orthographic_camera(-12,12,12,-12,-20,20);
-    shadow_camera.set_position_axis_aligned(glm::vec3(0,0,0));
-    //shadow_camera.look_at(-uniforms.sun_position.m_data);
-    shadow_camera.look_at(-uniforms.sun_position.m_data);
-    shadow_camera.on_update();
-
-    light_shader->bind();
-    uniforms.shadow_camera.m_data = shadow_camera.get_view_projection_matrix();
-    uniforms.update_shadow_camera();
-
-    auto shadowmap = std::make_shared<Lab4::Shadow_map>(720, 720, window);
-    auto cube_map = std::make_shared<Lab4::Cube_map>(720,720,window);
-
 
     float light_data[] = {
             -1,-1,
@@ -426,54 +584,51 @@ int main(int argc, char** argv) {
     auto light_vao = Engine::Vertex_array::Create();
     light_vao->add_vertex_buffer(light_vbo);
 
-
+    /// ------      Framebuffer for off-screen rendering     -------
     auto framebuffer = Engine::FrameBuffer::Create();
     auto diffuse_texture = Engine::Texture2D::Create_empty(window->get_width(), window->get_height(), GL_SRGB8_ALPHA8, GL_RGBA, GL_UNSIGNED_BYTE);
-    auto specular_texture = Engine::Texture2D::Create_empty(window->get_width(), window->get_height(), GL_RED, GL_RED,  GL_UNSIGNED_BYTE);
+    auto specular_texture = Engine::Texture2D::Create_empty(window->get_width(), window->get_height(), GL_R32F, GL_RED,  GL_FLOAT);
+    auto shinines_texture = Engine::Texture2D::Create_empty(window->get_width(), window->get_height(), GL_R32F, GL_RED, GL_FLOAT);
     auto normal_texture = Engine::Texture2D::Create_empty(window->get_width(),window->get_height(),GL_RGB32F,GL_RGB, GL_FLOAT);
     auto world_pos_texture = Engine::Texture2D::Create_empty(window->get_width(),window->get_height(),GL_RGB32F,GL_RGB, GL_FLOAT);
-
-
     auto depth_texture = Engine::Texture2D::Create_empty(window->get_width(), window->get_height(), GL_DEPTH24_STENCIL8,GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8);
 
     framebuffer->add_write_color_texture(diffuse_texture);
     framebuffer->add_write_color_texture(specular_texture);
+    framebuffer->add_write_color_texture(shinines_texture);
     framebuffer->add_write_color_texture(normal_texture);
     framebuffer->add_write_color_texture(world_pos_texture);
-    //framebuffer->add_read_color_texture(shadowmap->get_gexture());
-    framebuffer->add_read_color_texture(cube_map->get_gexture());
     framebuffer->set_depth_texture(depth_texture);
 
-
-    auto pointlight = Lab4::GL_Point_light::Create(1);
-
+    /// ------------------      Point lights     ------------------
+    auto pointlight = Lab4::GL_Point_light::Create(80);
     {
-        auto light_instance = std::make_shared<Lab4::LightNode>(pointlight,glm::vec3(1.0f,1.0f,1.0f),glm::vec4(0.0f,0.0f,0.0f,1.0f),8.0f,0.75f);
-        scene.add_node(light_instance);
+        auto light_instance = std::make_shared<Lab4::LightNode>(pointlight,glm::vec3(1.0f,1.0f,1.0f),glm::vec4(4.0f,9.0f,4.0f,1.0f),13.0f,0.5f);
+        floor.get_node()->add_node(light_instance);
     }
-
     {
         std::srand(time(nullptr));
-        for (int i = 0; i < 100; i++) {
-            float x = (rand()%1000)/50.0f-10.0f;
-            float z = (rand()%1000)/50.0f-10.0f;
-            auto light_instance = std::make_shared<Lab4::LightNode>(pointlight,glm::vec3(1.0f,1.0f,1.0f),glm::vec4(x,-4.0f,z,1),1.0f,0.5);
-            scene.add_node(light_instance);
+        for (int i = 0; i < 50; i++) {
+            float x = (rand()%80)/10.0f;
+            float z = (rand()%80)/10.0f;
+            auto light_instance = std::make_shared<Lab4::LightNode>(pointlight,glm::vec3(1.0f,1.0f,1.0f),glm::vec4(x,0.3f,z,1),0.75f,0.75);
+            floor.get_node()->add_node(light_instance);
         }
-
     }
 
-
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_CULL_FACE);
+    glLineWidth(3);
+    glPointSize(3);
+    glCullFace(GL_BACK);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    Engine::Render::Render_command::set_clear_color({134/255.0f,198/255.0f,247/255.0f,1});
     float angle = 0;
     while(!window->should_close()) {
 
         /// Update camera position
-        auto matrix = glm::rotate(glm::mat4(1),panel->pitch(), glm::vec3(1,0,0));
-        matrix = glm::rotate(matrix,panel->yaw(), glm::vec3(0,1,0));
-        glm::vec4 position = glm::mat4(1)*glm::vec4(0,0,panel->offset(),1);
-        position = matrix*position;
-        //camera.set_position_axis_aligned(position);
-        camera.set_FOV(glm::radians(panel->fov()));
         camera.on_update();
 
         uniforms.viewprojection_matrix.m_data = camera.get_view_projection_matrix();
@@ -481,8 +636,8 @@ int main(int argc, char** argv) {
         uniforms.viewport.m_data = camera.get_position();
         uniforms.update_viewport();
 
-        angle += 0.01;
-        scene.on_update(glm::translate(glm::rotate(glm::mat4(1),angle*0.5f,glm::vec3(0,1,0)),glm::vec3(0,2*sin(angle),0)));
+        //angle += 0.007;    // Remove the comment to make the world spin :)
+        scene->on_update(glm::translate(glm::rotate(glm::mat4(1),angle*0.5f,glm::vec3(0,1,0)),glm::vec3(0,0,0)));
 
         /// Render to custom framebuffer
 
@@ -491,8 +646,9 @@ int main(int argc, char** argv) {
         Engine::Render::Renderer::begin_scene();
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
-        model_1->on_render();
-        model_2->on_render();
+        for (const auto& mesh : meshes) {
+            mesh->on_render();
+        }
 
         /// Second render pass to default window. This is where the "light" will shine on everything
         /// and make it visible.
@@ -505,7 +661,7 @@ int main(int argc, char** argv) {
         Engine::Render::Render_command::set_clear_color({134/255.0f,198/255.0f,247/255.0f,1});
         Engine::Render::Renderer::begin_scene();
 
-        /// This should be replaced by an ambient light source.
+        /// Super simple ambient light source. This does a light calculation on every pixel.
         light_vao->bind();
         glDrawArrays(GL_TRIANGLES,0,6);
         light_vao->unbind();
@@ -513,6 +669,7 @@ int main(int argc, char** argv) {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
         pointlight->on_render();
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        
         gui.on_update();
         window->on_update();
     }

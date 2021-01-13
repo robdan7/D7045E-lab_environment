@@ -217,7 +217,7 @@ namespace Lab4 {
         }
     }
 
-    void create_pyramid(std::vector<float>& vertices, float height, float width, int segments) {
+    void create_cone(std::vector<float>& vertices, float height, float width, int segments) {
         float angle = 2*PI/segments;
         float w = width/2;
         glm::vec3 old_norm = glm::vec3();
@@ -290,6 +290,105 @@ namespace Lab4 {
             old_norm = norm;
             norm = new_norm;
         }
+    }
+
+    void create_floor(std::vector<float> &vertices, float width, float depth, int segments) {
+        float stepx = width / segments;
+        float stepz = depth / segments;
+        for (float x = 0; x < width; x += stepx) {
+            for (float z = 0; z < depth; z += stepz) {
+                vertices.push_back(x);
+                vertices.push_back(0);
+                vertices.push_back(z);
+                vertices.push_back(0);
+                vertices.push_back(1);
+                vertices.push_back(0);
+
+                vertices.push_back(x);
+                vertices.push_back(0);
+                vertices.push_back(z+stepz);
+                vertices.push_back(0);
+                vertices.push_back(1);
+                vertices.push_back(0);
+
+                vertices.push_back(x+stepx);
+                vertices.push_back(0);
+                vertices.push_back(z+stepz);
+                vertices.push_back(0);
+                vertices.push_back(1);
+                vertices.push_back(0);
+
+                vertices.push_back(x);
+                vertices.push_back(0);
+                vertices.push_back(z);
+                vertices.push_back(0);
+                vertices.push_back(1);
+                vertices.push_back(0);
+
+                vertices.push_back(x+stepx);
+                vertices.push_back(0);
+                vertices.push_back(z+stepz);
+                vertices.push_back(0);
+                vertices.push_back(1);
+                vertices.push_back(0);
+
+                vertices.push_back(x+stepx);
+                vertices.push_back(0);
+                vertices.push_back(z);
+                vertices.push_back(0);
+                vertices.push_back(1);
+                vertices.push_back(0);
+
+
+
+            }
+        }
+    }
+
+    void create_cube(std::vector<float> &vertices, float width) {
+        float d = width / 2.0f;
+        float arr[] = {-d, -d, d, 0, 0, 1,
+                       d, -d, d, 0, 0, 1,
+                       d, d, d, 0, 0, 1,
+                       -d, -d, d, 0, 0, 1,
+                       d, d, d, 0, 0, 1,
+                       -d, d, d, 0, 0, 1,
+
+                       d,-d,-d,0,0,-1,
+                       -d,-d,-d,0,0,-1,
+                       -d,d,-d,0,0,-1,
+                       d,-d,-d,0,0,-1,
+                       -d,d,-d,0,0,-1,
+                       d,d,-d,0,0,-1,
+
+                       d,-d,d,1,0,0,
+                       d,-d,-d,1,0,0,
+                       d,d,-d,1,0,0,
+                       d,-d,d,1,0,0,
+                       d,d,-d,1,0,0,
+                       d,d,d,1,0,0,
+
+                       -d,-d,-d,-1,0,0,
+                       -d,-d,d,-1,0,0,
+                       -d,d,d,-1,0,0,
+                       -d,-0.5,-d,-1,0,0,
+                       -d,d,d,-1,0,0,
+                       -d,d,-d,-1,0,0,
+
+                       d,d,d,0,1,0,
+                       d,d,-d,0,1,0,
+                       -d,d,-d,0,1,0,
+                       d,d,d,0,1,0,
+                       -d,d,-d,0,1,0,
+                       -d,d,d,0,1,0,
+
+                       -d,-d,-d,0,-1,0,
+                       d,-d,-d,0,-1,0,
+                       d,-d,0.5,0,-1,0,
+                       -d,-d,0.5,0,-1,0,
+                       -d,-d,-0.5,0,-1,0,
+                       d,-d,d,0,-1,0};
+        vertices.insert(vertices.begin(), std::begin(arr), std::end(arr));
     }
 
 }

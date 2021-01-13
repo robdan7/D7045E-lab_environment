@@ -29,8 +29,11 @@ namespace Lab4 {
     class GeometryNode : public InnerNode {
     public:
         GeometryNode(std::shared_ptr<Engine::Instanced_mesh> mesh, const void* instance_data, const glm::mat4& transform = glm::mat4(1));
-        void transform(const glm::vec3 &position);
+        void translate(const glm::vec3 &position);
         void rotate(const float &angle, const glm::vec3& axis);
+        void rotate(const glm::quat& rotation);
+        void scale(const glm::vec3& scale);
+        void reset_transform();
         void on_update(const glm::mat4& parent_M = glm::mat4(1)) override;
     protected:
         GeometryNode() {}

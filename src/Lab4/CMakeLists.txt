@@ -3,11 +3,8 @@ include(${PROJECT_SOURCE_DIR}/src/Engine/Engine_HEADERS.cmake)
 add_executable(Lab4
         Lab4.cpp
         Scene.cpp
-        Monochrome_material.cpp
+        Phong_material.cpp
         GraphicsNode.cpp
-        Shadowmap_material.cpp
-        Shadow_map.cpp
-        Cube_map.cpp
         Point_light.cpp
         Geometry.cpp)
 

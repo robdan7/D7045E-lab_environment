@@ -29,7 +29,7 @@ namespace Lab4 {
         this->m_instance_ID = this->p_mesh->add_instance(&memory[0]);
     }
 
-    void GeometryNode::transform(const glm::vec3 &position) {
+    void GeometryNode::translate(const glm::vec3 &position) {
         this->M = glm::translate(this->M, position);
     }
 
@@ -38,9 +38,21 @@ namespace Lab4 {
     }
 
     void GeometryNode::on_update(const glm::mat4 &parent_M) {
-        Node::on_update(parent_M);
+        InnerNode::on_update(parent_M);
 
         this->p_mesh->update_instance((char*)&this->PM, this->p_mesh->get_instance_stride()-sizeof(this->PM), this->m_instance_ID);
+    }
+
+    void GeometryNode::reset_transform() {
+        this->M = glm::mat4(1);
+    }
+
+    void GeometryNode::rotate(const glm::quat &rotation) {
+        this->M = this->M * glm::toMat4(rotation);
+    }
+
+    void GeometryNode::scale(const glm::vec3 &scale) {
+        this->M = glm::scale(this->M, scale);
     }
 
     LightNode::LightNode(std::shared_ptr<Lab4::GL_Point_light> light, const glm::vec3 color, glm::vec4 position, float radius, float exp_dropoff) : Engine::Point_light(color,position,radius,exp_dropoff,false){
